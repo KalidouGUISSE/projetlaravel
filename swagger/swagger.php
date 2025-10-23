@@ -11,7 +11,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Server(
     url: "https://projetlaravel-2.onrender.com/api/v1",
-    description: "Serveur de production"
+    description: "Serveur de production (dynamique via contrôleur)"
 )]
 #[OA\Schema(
     schema: "Client",
