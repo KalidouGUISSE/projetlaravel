@@ -10,8 +10,8 @@ use OpenApi\Attributes as OA;
     description: "Documentation de mon API Laravel pour la gestion des clients et comptes"
 )]
 #[OA\Server(
-    url: "https://projetlaravel-2.onrender.com/api/v1",
-    description: "Serveur de production (dynamique via contrôleur)"
+    url: "http://127.0.0.1:8000/api/v1",
+    description: "Serveur local de développement"
 )]
 #[OA\Schema(
     schema: "Client",
