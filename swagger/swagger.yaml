@@ -1,0 +1,260 @@
+openapi: 3.0.0
+info:
+  title: 'API Kalidou GUISSE'
+  description: 'Documentation de mon API Laravel pour la gestion des clients et comptes'
+  version: '0.1'
+servers:
+  -
+    url: 'http://127.0.0.1:8000/api/v1'
+    description: 'Serveur local de développement'
+  -
+    url: 'http://127.0.0.1:8000/api/v1'
+    description: 'Serveur local de développement'
+paths:
+  /comptes:
+    get:
+      tags:
+        - Comptes
+      summary: 'Lister les comptes'
+      description: 'Retourne la liste complète des comptes avec leurs clients associés.'
+      operationId: 62186908ce548b721ae5b90f621e56d4
+      responses:
+        '200':
+          description: 'Liste des comptes'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+  /clients:
+    get:
+      tags:
+        - Clients
+      summary: 'Lister tous les clients'
+      description: 'Retourne la liste de tous les clients.'
+      operationId: af1f3794367a5e843bf15e3a9033d911
+      responses:
+        '200':
+          description: 'Liste des clients'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      tags:
+        - Clients
+      summary: 'Créer un nouveau client'
+      description: 'Crée un nouveau client avec les informations fournies.'
+      operationId: 15981a5da120d8b4ea1b91b05a35622b
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - nom
+                - prenom
+                - email
+                - telephone
+                - adresse
+              properties:
+                nom:
+                  type: string
+                  example: Doe
+                prenom:
+                  type: string
+                  example: John
+                email:
+                  type: string
+                  format: email
+                  example: john.doe@example.com
+                telephone:
+                  type: string
+                  example: '+221 77 123 45 67'
+                adresse:
+                  type: string
+                  example: 'Dakar, Sénégal'
+              type: object
+      responses:
+        '201':
+          description: 'Client créé avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  message: { type: string, example: 'Client créé avec succès !' }
+                  data: { type: object }
+                type: object
+  '/clients/{id}':
+    get:
+      tags:
+        - Clients
+      summary: 'Afficher un client spécifique'
+      description: "Retourne les détails d'un client par son ID."
+      operationId: 2965e9737f628d15ea88209095622c24
+      parameters:
+        -
+          name: id
+          in: path
+          description: 'ID du client'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Détails du client'
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: 'Client non trouvé'
+    put:
+      tags:
+        - Clients
+      summary: 'Mettre à jour un client'
+      description: "Met à jour les informations d'un client existant."
+      operationId: 162fed3ea25bb60bf0b156c7b21313e6
+      parameters:
+        -
+          name: id
+          in: path
+          description: 'ID du client'
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                nom:
+                  type: string
+                  example: Doe
+                prenom:
+                  type: string
+                  example: John
+                email:
+                  type: string
+                  format: email
+                  example: john.doe@example.com
+                telephone:
+                  type: string
+                  example: '+221 77 123 45 67'
+                adresse:
+                  type: string
+                  example: 'Dakar, Sénégal'
+              type: object
+      responses:
+        '200':
+          description: 'Client mis à jour avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  message: { type: string, example: 'Client mis à jour avec succès !' }
+                  data: { type: object }
+                type: object
+        '404':
+          description: 'Client non trouvé'
+    delete:
+      tags:
+        - Clients
+      summary: 'Supprimer un client'
+      description: 'Supprime un client par son ID.'
+      operationId: 20de5e8bdef993807384fd7040f9ae92
+      parameters:
+        -
+          name: id
+          in: path
+          description: 'ID du client'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Client supprimé avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  message: { type: string, example: 'Client supprimé avec succès !' }
+                type: object
+        '404':
+          description: 'Client non trouvé'
+components:
+  schemas:
+    Client:
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        nom:
+          type: string
+          example: Doe
+        prenom:
+          type: string
+          example: John
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        telephone:
+          type: string
+          example: '+221 77 123 45 67'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      type: object
+    Compte:
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174001
+        client_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        numeroCompte:
+          type: string
+          example: COMP-12345678
+        type:
+          type: string
+          example: courant
+        solde:
+          type: number
+          format: float
+          example: 1000.5
+        statut:
+          type: string
+          example: actif
+        metadata:
+          type: object
+          example:
+            derniereModification: '2023-10-23T04:13:35.000000Z'
+            version: 1
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        client:
+          $ref: '#/components/schemas/Client'
+      type: object
+tags:
+  -
+    name: Comptes
+    description: Comptes
+  -
+    name: Clients
+    description: Clients
