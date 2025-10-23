@@ -12,7 +12,7 @@ class StoreClientRequest extends FormRequest
     public function authorize(): bool
     {
         // true si tout utilisateur peut créer un client
-        return false;
+        return true;
     }
 
     /**
@@ -27,7 +27,6 @@ class StoreClientRequest extends FormRequest
             'prenom'    => 'required|string|max:255',
             'email'     => 'required|email|unique:clients,email',
             'telephone' => 'required|string|min:9|max:15',
-            'adresse'   => 'nullable|string|max:255',
         ];
     }
 
