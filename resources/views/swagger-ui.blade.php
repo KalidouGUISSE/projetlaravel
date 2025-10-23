@@ -26,8 +26,9 @@
     <script src="https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui-standalone-preset.js"></script>
     <script>
         window.onload = function() {
+            const jsonUrl = '{{ env("APP_ENV") === "local" ? route("swagger.json") : "https://projetlaravel-2.onrender.com/api/docs.json" }}';
             SwaggerUIBundle({
-                url: '{{ route("swagger.json") }}',
+                url: jsonUrl,
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
