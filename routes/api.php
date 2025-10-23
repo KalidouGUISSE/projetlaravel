@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\Api\V1\CompteController;
+use App\Http\Controllers\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,10 +27,11 @@ Route::middleware('auth:api')->get('/user', function ($request) {
 
 Route::apiResource('clients', ClientController::class);
 
-// Route::prefix('v1')->group(function () {
-//     Route::middleware('auth:api')->group(function () {
-//         Route::get('/comptes', [CompteController::class, 'index']);
-//     });
-// });
-
+// Routes pour les comptes (Client)
 Route::get('v1/comptes', [CompteController::class, 'index']);
+
+// Routes pour les admins
+Route::apiResource('admins', AdminController::class)->except(['index', 'show', 'update', 'destroy']);
+Route::prefix('admins')->group(function () {
+    Route::get('/comptes', [AdminController::class, 'getAllComptes']);
+});

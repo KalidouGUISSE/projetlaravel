@@ -3,15 +3,15 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class StoreClientRequest extends FormRequest
+class StoreAdminRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        // true si tout utilisateur peut créer un client
         return true;
     }
 
@@ -28,16 +28,16 @@ class StoreClientRequest extends FormRequest
             'email'     => [
                 'required',
                 'email',
-                'unique:clients,email',
-                \Illuminate\Validation\Rule::unique('admins', 'email')->ignore($this->route('client')) // Email unique entre clients et admins
+                'unique:admins,email',
+                Rule::unique('clients', 'email')->ignore($this->route('admin')) // Email unique entre clients et admins
             ],
             'telephone' => [
                 'required',
                 'string',
                 'min:9',
                 'max:15',
-                'unique:clients,telephone',
-                \Illuminate\Validation\Rule::unique('admins', 'telephone')->ignore($this->route('client')) // Téléphone unique entre clients et admins
+                'unique:admins,telephone',
+                Rule::unique('clients', 'telephone')->ignore($this->route('admin')) // Téléphone unique entre clients et admins
             ],
         ];
     }
@@ -51,6 +51,7 @@ class StoreClientRequest extends FormRequest
             'email.email'        => 'Veuillez saisir un email valide.',
             'email.unique'       => 'Cet email est déjà utilisé.',
             'telephone.required' => 'Le numéro de téléphone est obligatoire.',
+            'telephone.unique'   => 'Ce numéro de téléphone est déjà utilisé.',
         ];
     }
 }
