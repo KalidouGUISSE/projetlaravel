@@ -12,7 +12,7 @@ class CompteController extends Controller
     #[OA\Get(
         path: "/comptes",
         summary: "Lister les comptes",
-        description: "Retourne la liste complète des comptes avec leurs clients associés.",
+        description: "Retourne la liste complète des comptes avec leurs clients associés .",
         tags: ["Comptes"],
         responses: [
             new OA\Response(
