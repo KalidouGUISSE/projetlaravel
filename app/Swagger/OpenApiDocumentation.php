@@ -10,7 +10,7 @@ use OpenApi\Attributes as OA;
     description: "Documentation de mon API Laravel pour la gestion des clients et comptes"
 )]
 #[OA\Server(
-    url: "http://127.0.0.1:8000/api/v1",
+    url: "http://127.0.0.1:8000/api",
     description: "Serveur local de développement"
 )]
 #[OA\Schema(
@@ -31,11 +31,14 @@ use OpenApi\Attributes as OA;
     type: "object",
     properties: [
         new OA\Property(property: "id", type: "string", format: "uuid", example: "281f3aa6-bffe-41bd-8c31-2b02a1e49275"),
-        new OA\Property(property: "client_id", type: "string", format: "uuid", example: "c7917097-4734-4dfd-a462-b6c8f8d4aea3"),
         new OA\Property(property: "numeroCompte", type: "string", example: "23886990999492"),
+        new OA\Property(property: "titulaire", type: "string", example: "Kilback Laury"),
         new OA\Property(property: "type", type: "string", enum: ["epargne", "cheque"], example: "cheque"),
         new OA\Property(property: "solde", type: "number", format: "float", example: 1558.59),
+        new OA\Property(property: "devise", type: "string", example: "FCFA"),
+        new OA\Property(property: "dateCreation", type: "string", format: "date-time", example: "2025-10-22T11:37:37.000000Z"),
         new OA\Property(property: "statut", type: "string", enum: ["actif", "bloque", "ferme"], example: "actif"),
+        new OA\Property(property: "motifBlocage", type: "string", nullable: true, example: "Inactivité de 30+ jours"),
         new OA\Property(
             property: "metadata",
             type: "object",
@@ -43,21 +46,40 @@ use OpenApi\Attributes as OA;
                 new OA\Property(property: "derniereModification", type: "string", format: "date-time", example: "2025-10-22T11:37:37.082038Z"),
                 new OA\Property(property: "version", type: "integer", example: 1)
             ]
-        ),
-        new OA\Property(property: "created_at", type: "string", format: "date-time", example: "2025-10-22T11:37:37.000000Z"),
-        new OA\Property(property: "updated_at", type: "string", format: "date-time", example: "2025-10-22T11:37:37.000000Z"),
-        new OA\Property(property: "client", ref: "#/components/schemas/Client")
+        )
     ]
 )]
 #[OA\Schema(
     schema: "CompteResponse",
     type: "object",
     properties: [
-        new OA\Property(property: "status", type: "string", example: "success"),
+        new OA\Property(property: "success", type: "boolean", example: true),
         new OA\Property(
             property: "data",
             type: "array",
             items: new OA\Items(ref: "#/components/schemas/Compte")
+        ),
+        new OA\Property(
+            property: "pagination",
+            type: "object",
+            properties: [
+                new OA\Property(property: "currentPage", type: "integer", example: 1),
+                new OA\Property(property: "totalPages", type: "integer", example: 5),
+                new OA\Property(property: "totalItems", type: "integer", example: 50),
+                new OA\Property(property: "hasNext", type: "boolean", example: true),
+                new OA\Property(property: "hasPrevious", type: "boolean", example: false)
+            ]
+        ),
+        new OA\Property(
+            property: "links",
+            type: "object",
+            properties: [
+                new OA\Property(property: "self", type: "string", example: "http://localhost:8000/api/v1/comptes?page=1"),
+                new OA\Property(property: "first", type: "string", example: "http://localhost:8000/api/v1/comptes?page=1"),
+                new OA\Property(property: "last", type: "string", example: "http://localhost:8000/api/v1/comptes?page=5"),
+                new OA\Property(property: "next", type: "string", nullable: true, example: "http://localhost:8000/api/v1/comptes?page=2"),
+                new OA\Property(property: "previous", type: "string", nullable: true, example: null)
+            ]
         )
     ]
 )]
@@ -145,6 +167,38 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: "message", type: "string", example: "Non authentifié"),
         new OA\Property(property: "errors", type: "object", nullable: true, example: null),
         new OA\Property(property: "code", type: "integer", example: 401)
+    ]
+)]
+#[OA\Schema(
+    schema: "Admin",
+    type: "object",
+    properties: [
+        new OA\Property(property: "id", type: "string", format: "uuid", example: "c7917097-4734-4dfd-a462-b6c8f8d4aea3"),
+        new OA\Property(property: "nom", type: "string", example: "Kilback"),
+        new OA\Property(property: "prenom", type: "string", example: "Laury"),
+        new OA\Property(property: "email", type: "string", format: "email", example: "brigitte.kuhn@example.net"),
+        new OA\Property(property: "telephone", type: "string", example: "+1-201-736-0670"),
+        new OA\Property(property: "created_at", type: "string", format: "date-time", example: "2025-10-22T11:37:37.000000Z"),
+        new OA\Property(property: "updated_at", type: "string", format: "date-time", example: "2025-10-22T11:37:37.000000Z")
+    ]
+)]
+#[OA\Schema(
+    schema: "AdminResponse",
+    type: "object",
+    properties: [
+        new OA\Property(property: "message", type: "string", example: "Admin créé avec succès !"),
+        new OA\Property(property: "data", ref: "#/components/schemas/Admin")
+    ]
+)]
+#[OA\Schema(
+    schema: "AdminCreateRequest",
+    type: "object",
+    required: ["nom", "prenom", "email", "telephone"],
+    properties: [
+        new OA\Property(property: "nom", type: "string", example: "Kilback"),
+        new OA\Property(property: "prenom", type: "string", example: "Laury"),
+        new OA\Property(property: "email", type: "string", format: "email", example: "brigitte.kuhn@example.net"),
+        new OA\Property(property: "telephone", type: "string", example: "+1-201-736-0670")
     ]
 )]
 class OpenApiDocumentation {}

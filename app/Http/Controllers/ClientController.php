@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Http\Requests\StoreClientRequest;
 use App\Models\Client;
+use App\Http\Resources\ClientResource;
 use OpenApi\Attributes as OA;
 
 class ClientController extends Controller
@@ -41,7 +42,7 @@ class ClientController extends Controller
      */
     public function index()
     {
-        return response()->json(Client::all(), 200);
+        return ClientResource::collection(Client::all());
     }
 
     #[OA\Post(
@@ -86,7 +87,7 @@ class ClientController extends Controller
 
         return response()->json([
             'message' => 'Client créé avec succès !',
-            'data'    => $client,
+            'data'    => new ClientResource($client),
         ], 201);
     }
 
@@ -129,7 +130,7 @@ class ClientController extends Controller
     public function show(string $id)
     {
         $client = Client::findOrFail($id);
-        return response()->json($client, 200);
+        return new ClientResource($client);
     }
 
     #[OA\Put(
@@ -183,7 +184,7 @@ class ClientController extends Controller
 
         return response()->json([
             'message' => 'Client mis à jour avec succès !',
-            'data'    => $client,
+            'data'    => new ClientResource($client),
         ], 200);
     }
 

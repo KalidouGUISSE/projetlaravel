@@ -7,23 +7,75 @@ use Illuminate\Support\Str;
 use App\Models\Admin;
 use App\Models\Compte;
 use App\Http\Requests\StoreAdminRequest;
+use App\Traits\ApiResponseTrait;
+use App\Http\Resources\AdminResource;
+use App\Http\Resources\CompteResource;
 use OpenApi\Attributes as OA;
 
 class AdminController extends Controller
 {
+    use ApiResponseTrait;
     #[OA\Get(
         path: "/admins/comptes",
-        summary: "Lister tous les comptes (Admin)",
-        description: "Retourne la liste de tous les comptes avec leurs clients associés.",
+        summary: "Lister tous les comptes avec pagination et filtres (Admin)",
+        description: "Retourne la liste paginée de tous les comptes avec support pour la pagination, le tri et les filtres.",
         tags: ["Admins"],
+        parameters: [
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                description: "Numéro de la page",
+                schema: new OA\Schema(type: "integer", minimum: 1, default: 1)
+            ),
+            new OA\Parameter(
+                name: "limit",
+                in: "query",
+                required: false,
+                description: "Nombre d'éléments par page (max 100)",
+                schema: new OA\Schema(type: "integer", minimum: 1, maximum: 100, default: 10)
+            ),
+            new OA\Parameter(
+                name: "sort",
+                in: "query",
+                required: false,
+                description: "Champ de tri",
+                schema: new OA\Schema(type: "string", enum: ["created_at", "solde", "numeroCompte"], default: "created_at")
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Ordre de tri",
+                schema: new OA\Schema(type: "string", enum: ["asc", "desc"], default: "desc")
+            ),
+            new OA\Parameter(
+                name: "type",
+                in: "query",
+                required: false,
+                description: "Filtrer par type de compte",
+                schema: new OA\Schema(type: "string", enum: ["epargne", "cheque"])
+            ),
+            new OA\Parameter(
+                name: "statut",
+                in: "query",
+                required: false,
+                description: "Filtrer par statut",
+                schema: new OA\Schema(type: "string", enum: ["actif", "bloque", "ferme"])
+            ),
+            new OA\Parameter(
+                name: "search",
+                in: "query",
+                required: false,
+                description: "Rechercher dans numeroCompte, nom ou prenom du client",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: "Liste des comptes",
-                content: new OA\JsonContent(
-                    type: "array",
-                    items: new OA\Items(ref: "#/components/schemas/CompteResponse")
-                )
+                description: "Liste paginée des comptes",
+                content: new OA\JsonContent(ref: "#/components/schemas/CompteResponse")
             ),
             new OA\Response(
                 response: 401,
@@ -38,15 +90,25 @@ class AdminController extends Controller
         ]
     )]
     /**
-     * Admin peut récupérer la liste de tous les comptes
+     * Admin peut récupérer la liste de tous les comptes avec pagination et filtres
      */
-    public function getAllComptes()
+    public function getAllComptes(Request $request)
     {
-        $comptes = Compte::with('client')->get();
+        $query = Compte::with('client');
+
+        // Utiliser le trait pour la pagination, mais transformer avec CompteResource
+        $paginated = $query->paginate($request->get('limit', 10));
 
         return response()->json([
-            'status' => 'success',
-            'data' => $comptes
+            'success' => true,
+            'data' => CompteResource::collection($paginated->items()),
+            'pagination' => [
+                'currentPage' => $paginated->currentPage(),
+                'totalPages' => $paginated->lastPage(),
+                'totalItems' => $paginated->total(),
+                'hasNext' => $paginated->hasMorePages(),
+                'hasPrevious' => $paginated->currentPage() > 1,
+            ],
         ], 200);
     }
 
@@ -92,7 +154,7 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => 'Admin créé avec succès !',
-            'data'    => $admin,
+            'data'    => new AdminResource($admin),
         ], 201);
     }
 }

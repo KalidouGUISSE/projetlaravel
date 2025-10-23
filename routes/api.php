@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\Api\V1\CompteController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\RequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,21 +18,35 @@ use App\Http\Controllers\AdminController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Routes API version 1
+Route::prefix('v1')->group(function () {
 
-Route::middleware('auth:api')->get('/user', function ($request) {
-    return $request->user();
-});
+    // Route pour tester le RequestController (pas d'auth)
+    Route::get('/request', [RequestController::class, 'handle']);
 
-Route::apiResource('clients', ClientController::class);
+    // Route de login pour Sanctum
+    Route::post('/login', function (Request $request) {
+        // Exemple simple de login, à adapter
+        return response()->json(['message' => 'Login endpoint'], 200);
+    });
 
-// Routes pour les comptes (Client)
-Route::get('v1/comptes', [CompteController::class, 'index']);
+    // Routes pour les clients (avec auth et rate limiting)
+    Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+        Route::apiResource('clients', ClientController::class);
+    });
 
-// Routes pour les admins
-Route::apiResource('admins', AdminController::class)->except(['index', 'show', 'update', 'destroy']);
-Route::prefix('admins')->group(function () {
-    Route::get('/comptes', [AdminController::class, 'getAllComptes']);
+    // Routes pour les comptes (avec auth et rate limiting)
+    Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+        Route::get('/comptes', [CompteController::class, 'index']);
+    });
+
+    // Route de test pour comptes sans auth (pour tester)
+    Route::get('/comptes-test', [CompteController::class, 'index']);
+
+    // Routes pour les admins (avec auth et rate limiting)
+    Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+        Route::apiResource('admins', AdminController::class)->except(['index', 'show', 'update', 'destroy']);
+        Route::get('/admins/comptes', [AdminController::class, 'getAllComptes']);
+    });
+
 });

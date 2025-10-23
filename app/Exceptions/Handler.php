@@ -3,7 +3,9 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
 use Throwable;
+use Illuminate\Http\JsonResponse;
 
 class Handler extends ExceptionHandler
 {
@@ -26,5 +28,45 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    /**
+     * Render an exception into an HTTP response.
+     */
+    public function render($request, Throwable $e)
+    {
+        if ($request->is('api/*')) {
+            if ($e instanceof NotFoundException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 404);
+            }
+
+            if ($e instanceof UnauthorizedException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 401);
+            }
+
+            if ($e instanceof ValidationException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors' => $e->getErrors(),
+                ], 422);
+            }
+
+            // Gérer les exceptions d'authentification pour les API
+            if ($e instanceof \Illuminate\Auth\AuthenticationException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+        }
+
+        return parent::render($request, $e);
     }
 }
