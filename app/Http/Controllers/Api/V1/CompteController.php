@@ -110,23 +110,14 @@ class CompteController extends Controller
      */
     public function index(Request $request)
     {
-        // Assumer que le client est authentifié et son ID est disponible via auth
-        // Pour l'exemple, on utilise un client_id fictif ou via auth
-        // En production, utiliser auth()->user()->client_id ou similaire
-        $clientId = $request->input('client_id'); // Temporaire, à remplacer par auth
+        $clientId = $request->input('client_id');
 
-        if (!$clientId) {
-            // Pour le test, utiliser le premier client si pas fourni
-            $clientId = Client::first()->id ?? null;
-            if (!$clientId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Aucun client trouvé'
-                ], 404);
-            }
+        if ($clientId) {
+            $query = Compte::where('client_id', $clientId)->with('client');
+        } else {
+            // Lister tous les comptes si pas de client_id fourni
+            $query = Compte::with('client');
         }
-
-        $query = Compte::where('client_id', $clientId)->with('client');
 
         // Utiliser le trait pour la pagination, mais transformer avec CompteResource
         $paginated = $query->paginate($request->get('limit', 10));
@@ -329,36 +320,12 @@ class CompteController extends Controller
         try {
             $compte = Compte::with('client')->findOrFail($id);
 
-            // Vérifier si l'utilisateur est admin ou client
-            $user = auth()->user();
-
-            if (!$user) {
-                return $this->errorResponse('Non authentifié', 401);
-            }
-
-            // Vérifier si l'utilisateur est admin (par email dans la table admins)
-            $isAdmin = Admin::where('email', $user->email)->exists();
-
-            if ($isAdmin) {
-                // Admin peut voir tous les comptes
-                return $this->successResponse(
-                    $this->getCompteData($compte),
-                    'Compte récupéré avec succès',
-                    200
-                );
-            } else {
-                // Client ne peut voir que ses propres comptes
-                // Vérifier si le compte appartient au client avec le même email
-                if ($user->email !== $compte->client->email) {
-                    return $this->errorResponse('Accès refusé', 403);
-                }
-
-                return $this->successResponse(
-                    $this->getCompteData($compte),
-                    'Compte récupéré avec succès',
-                    200
-                );
-            }
+            // Retourner directement les données du compte sans vérifications d'auth
+            return $this->successResponse(
+                $this->getCompteData($compte),
+                'Compte récupéré avec succès',
+                200
+            );
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->errorResponse('Compte non trouvé', 404);

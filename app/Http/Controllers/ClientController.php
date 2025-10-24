@@ -12,38 +12,110 @@ use OpenApi\Attributes as OA;
 class ClientController extends Controller
 {
     #[OA\Get(
-        path: "/clients",
-        summary: "Lister tous les clients",
-        description: "Retourne la liste de tous les clients.",
-        tags: ["Clients"],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: "Liste des clients",
-                content: new OA\JsonContent(
-                    type: "array",
-                    items: new OA\Items(ref: "#/components/schemas/Client")
-                )
-            ),
-            new OA\Response(
-                response: 401,
-                description: "Non authentifié",
-                content: new OA\JsonContent(ref: "#/components/schemas/UnauthorizedErrorResponse")
-            ),
-            new OA\Response(
-                response: 500,
-                description: "Erreur serveur",
-                content: new OA\JsonContent(ref: "#/components/schemas/ErrorResponse")
-            )
-        ]
-    )]
+         path: "/clients",
+         summary: "Lister tous les clients avec pagination",
+         description: "Retourne la liste paginée des clients avec support pour la pagination, le tri et les filtres.",
+         tags: ["Clients"],
+         parameters: [
+             new OA\Parameter(
+                 name: "page",
+                 in: "query",
+                 required: false,
+                 description: "Numéro de la page",
+                 schema: new OA\Schema(type: "integer", minimum: 1, default: 1)
+             ),
+             new OA\Parameter(
+                 name: "limit",
+                 in: "query",
+                 required: false,
+                 description: "Nombre d'éléments par page (max 100)",
+                 schema: new OA\Schema(type: "integer", minimum: 1, maximum: 100, default: 10)
+             ),
+             new OA\Parameter(
+                 name: "sort",
+                 in: "query",
+                 required: false,
+                 description: "Champ de tri",
+                 schema: new OA\Schema(type: "string", enum: ["created_at", "nom", "prenom", "email"], default: "created_at")
+             ),
+             new OA\Parameter(
+                 name: "order",
+                 in: "query",
+                 required: false,
+                 description: "Ordre de tri",
+                 schema: new OA\Schema(type: "string", enum: ["asc", "desc"], default: "desc")
+             ),
+             new OA\Parameter(
+                 name: "search",
+                 in: "query",
+                 required: false,
+                 description: "Rechercher dans nom, prenom ou email",
+                 schema: new OA\Schema(type: "string")
+             )
+         ],
+         responses: [
+             new OA\Response(
+                 response: 200,
+                 description: "Liste paginée des clients",
+                 content: new OA\JsonContent(
+                     properties: [
+                         new OA\Property(property: "success", type: "boolean", example: true),
+                         new OA\Property(property: "data", type: "array", items: new OA\Items(ref: "#/components/schemas/Client")),
+                         new OA\Property(property: "pagination", type: "object", properties: [
+                             new OA\Property(property: "currentPage", type: "integer", example: 1),
+                             new OA\Property(property: "totalPages", type: "integer", example: 1),
+                             new OA\Property(property: "totalItems", type: "integer", example: 10),
+                             new OA\Property(property: "hasNext", type: "boolean", example: false),
+                             new OA\Property(property: "hasPrevious", type: "boolean", example: false)
+                         ])
+                     ],
+                     type: "object"
+                 )
+             ),
+             new OA\Response(
+                 response: 500,
+                 description: "Erreur serveur",
+                 content: new OA\JsonContent(ref: "#/components/schemas/ErrorResponse")
+             )
+         ]
+     )]
     /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        return ClientResource::collection(Client::all());
-    }
+      * Display a listing of the resource with pagination.
+      */
+     public function index(Request $request)
+     {
+         $query = Client::query();
+
+         // Appliquer la recherche si fournie
+         if ($request->has('search') && !empty($request->search)) {
+             $search = $request->search;
+             $query->where(function($q) use ($search) {
+                 $q->where('nom', 'like', "%{$search}%")
+                   ->orWhere('prenom', 'like', "%{$search}%")
+                   ->orWhere('email', 'like', "%{$search}%");
+             });
+         }
+
+         // Appliquer le tri
+         $sort = $request->get('sort', 'created_at');
+         $order = $request->get('order', 'desc');
+         $query->orderBy($sort, $order);
+
+         // Paginer les résultats
+         $paginated = $query->paginate($request->get('limit', 10));
+
+         return response()->json([
+             'success' => true,
+             'data' => ClientResource::collection($paginated->items()),
+             'pagination' => [
+                 'currentPage' => $paginated->currentPage(),
+                 'totalPages' => $paginated->lastPage(),
+                 'totalItems' => $paginated->total(),
+                 'hasNext' => $paginated->hasMorePages(),
+                 'hasPrevious' => $paginated->currentPage() > 1,
+             ],
+         ], 200);
+     }
 
     #[OA\Post(
         path: "/clients",
