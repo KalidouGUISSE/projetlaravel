@@ -10,8 +10,8 @@ use OpenApi\Attributes as OA;
     description: "Documentation de mon API Laravel pour la gestion des clients et comptes"
 )]
 #[OA\Server(
-    url: "http://127.0.0.1:8000/api",
-    description: "Serveur local de développement"
+    url: "https://projetlaravel-3.onrender.com/api",
+    description: "Serveur de production"
 )]
 #[OA\Schema(
     schema: "Client",
@@ -74,10 +74,10 @@ use OpenApi\Attributes as OA;
             property: "links",
             type: "object",
             properties: [
-                new OA\Property(property: "self", type: "string", example: "http://localhost:8000/api/v1/comptes?page=1"),
-                new OA\Property(property: "first", type: "string", example: "http://localhost:8000/api/v1/comptes?page=1"),
-                new OA\Property(property: "last", type: "string", example: "http://localhost:8000/api/v1/comptes?page=5"),
-                new OA\Property(property: "next", type: "string", nullable: true, example: "http://localhost:8000/api/v1/comptes?page=2"),
+                new OA\Property(property: "self", type: "string", example: "https://projetlaravel-3.onrender.com/api/v1/comptes?page=1"),
+                new OA\Property(property: "first", type: "string", example: "https://projetlaravel-3.onrender.com/api/v1/comptes?page=1"),
+                new OA\Property(property: "last", type: "string", example: "https://projetlaravel-3.onrender.com/api/v1/comptes?page=5"),
+                new OA\Property(property: "next", type: "string", nullable: true, example: "https://projetlaravel-3.onrender.com/api/v1/comptes?page=2"),
                 new OA\Property(property: "previous", type: "string", nullable: true, example: null)
             ]
         )

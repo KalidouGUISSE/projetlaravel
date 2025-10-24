@@ -5,11 +5,8 @@ info:
   version: '0.1'
 servers:
   -
-    url: 'http://127.0.0.1:8000/api/v1'
-    description: 'Serveur local de développement'
-  -
-    url: 'http://127.0.0.1:8000/api/v1'
-    description: 'Serveur local de développement'
+    url: 'https://projetlaravel-3.onrender.com/api/v1'
+    description: 'Serveur de production'
 paths:
   /comptes:
     get:

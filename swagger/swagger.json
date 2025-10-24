@@ -7,8 +7,8 @@
     },
     "servers": [
         {
-            "url": "http://127.0.0.1:8000/api",
-            "description": "Serveur local de développement"
+            "url": "https://projetlaravel-3.onrender.com/api",
+            "description": "Serveur de production"
         }
     ],
     "paths": {
@@ -774,19 +774,19 @@
                         "properties": {
                             "self": {
                                 "type": "string",
-                                "example": "http://localhost:8000/api/v1/comptes?page=1"
+                                "example": "https://projetlaravel-3.onrender.com/api/v1/comptes?page=1"
                             },
                             "first": {
                                 "type": "string",
-                                "example": "http://localhost:8000/api/v1/comptes?page=1"
+                                "example": "https://projetlaravel-3.onrender.com/api/v1/comptes?page=1"
                             },
                             "last": {
                                 "type": "string",
-                                "example": "http://localhost:8000/api/v1/comptes?page=5"
+                                "example": "https://projetlaravel-3.onrender.com/api/v1/comptes?page=5"
                             },
                             "next": {
                                 "type": "string",
-                                "example": "http://localhost:8000/api/v1/comptes?page=2",
+                                "example": "https://projetlaravel-3.onrender.com/api/v1/comptes?page=2",
                                 "nullable": true
                             },
                             "previous": {
