@@ -25,6 +25,7 @@ Utiliser Sanctum pour l'authentification.
 ### Comptes
 
 - **GET /comptes** : Lister les comptes d'un client (avec client_id)
+- **GET /comptes/{id}** : Récupérer un compte spécifique (admin : tous, client : seulement les siens)
 - **POST /comptes** : Créer un nouveau compte (avec création de client si nécessaire)
 
 #### Exemple - Créer un compte
@@ -78,6 +79,42 @@ curl -X POST http://localhost:8001/api/v1/comptes \
       "version": 1
     }
   }
+}
+```
+
+#### Exemple - Récupérer un compte spécifique
+```bash
+curl -X GET http://localhost:8001/api/v1/comptes/{id} \
+  -H "Authorization: Bearer {token}"
+```
+
+**Response (200) :**
+```json
+{
+  "success": true,
+  "message": "Compte récupéré avec succès",
+  "data": {
+    "id": "uuid",
+    "numeroCompte": "C00123460",
+    "titulaire": "Hawa BB Wane",
+    "type": "cheque",
+    "solde": 500000,
+    "devise": "FCFA",
+    "dateCreation": "2025-10-19T10:30:00Z",
+    "statut": "actif",
+    "metadata": {
+      "derniereModification": "2025-10-19T10:30:00Z",
+      "version": 1
+    }
+  }
+}
+```
+
+**Response (403 - Accès refusé pour client) :**
+```json
+{
+  "success": false,
+  "message": "Accès refusé"
 }
 ```
 

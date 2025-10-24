@@ -43,6 +43,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
          Route::get('/comptes', [CompteController::class, 'index']);
          Route::post('/comptes', [CompteController::class, 'store']);
+         Route::get('/comptes/{id}', [CompteController::class, 'show']);
     });
 
     // Route de test pour comptes sans auth (pour tester)

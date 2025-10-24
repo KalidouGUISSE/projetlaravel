@@ -195,11 +195,18 @@ curl -X POST http://localhost:8000/api/clients \
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
 | GET | `/api/v1/comptes` | Lister tous les comptes avec clients |
+| GET | `/api/v1/comptes/{id}` | Récupérer un compte spécifique (admin : tous, client : seulement les siens) |
 | POST | `/api/v1/comptes` | Créer un nouveau compte (avec client si nécessaire) |
 
 #### Exemple - Lister les comptes
 ```bash
 curl -H "Authorization: Bearer {token}" http://localhost:8001/api/v1/comptes
+```
+
+#### Exemple - Récupérer un compte spécifique
+```bash
+curl -X GET http://localhost:8001/api/v1/comptes/{id} \
+  -H "Authorization: Bearer {token}"
 ```
 
 #### Exemple - Créer un compte

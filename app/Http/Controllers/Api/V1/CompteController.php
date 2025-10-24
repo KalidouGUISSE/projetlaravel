@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Compte;
 use App\Models\Client;
+use App\Models\Admin;
 use App\Traits\ApiResponseTrait;
 use App\Http\Resources\CompteResource;
 use App\Http\Requests\CompteRequest;
@@ -245,23 +246,124 @@ class CompteController extends Controller
             // Le numéro de compte est généré automatiquement dans le boot
 
             return $this->successResponse(
+                $this->getCompteData($compte),
                 'Compte créé avec succès',
-                [
-                    'id' => $compte->id,
-                    'numeroCompte' => $compte->numeroCompte,
-                    'titulaire' => $compte->client->titulaire ?? $compte->client->nom . ' ' . $compte->client->prenom,
-                    'type' => $compte->type,
-                    'solde' => $compte->solde,
-                    'devise' => 'FCFA',
-                    'dateCreation' => $compte->created_at->toISOString(),
-                    'statut' => $compte->statut,
-                    'metadata' => $compte->metadata,
-                ],
                 201
             );
 
         } catch (\Exception $e) {
             return $this->errorResponse('Erreur lors de la création du compte : ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Générer la structure de données du compte pour la réponse
+     */
+    private function getCompteData(Compte $compte): array
+    {
+        return [
+            'id' => $compte->id,
+            'numeroCompte' => $compte->numeroCompte,
+            'titulaire' => $compte->client->titulaire ?? $compte->client->nom . ' ' . $compte->client->prenom,
+            'type' => $compte->type,
+            'solde' => $compte->solde,
+            'devise' => 'FCFA',
+            'dateCreation' => $compte->created_at->toISOString(),
+            'statut' => $compte->statut,
+            'metadata' => $compte->metadata,
+        ];
+    }
+
+    #[OA\Get(
+        path: "/v1/comptes/{id}",
+        summary: "Récupérer un compte spécifique",
+        description: "Admin peut récupérer n'importe quel compte. Client peut récupérer seulement ses propres comptes.",
+        security: [
+            new OA\SecurityScheme(
+                securityScheme: "bearerAuth",
+                type: "http",
+                scheme: "bearer"
+            )
+        ],
+        tags: ["Comptes"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID du compte",
+                schema: new OA\Schema(type: "string", format: "uuid")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Détails du compte",
+                content: new OA\JsonContent(ref: "#/components/schemas/CompteResponse")
+            ),
+            new OA\Response(
+                response: 403,
+                description: "Accès refusé",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: false),
+                        new OA\Property(property: "message", type: "string", example: "Accès refusé")
+                    ],
+                    type: "object"
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: "Compte non trouvé",
+                content: new OA\JsonContent(ref: "#/components/schemas/NotFoundErrorResponse")
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Erreur serveur",
+                content: new OA\JsonContent(ref: "#/components/schemas/ErrorResponse")
+            )
+        ]
+    )]
+    public function show(string $id)
+    {
+        try {
+            $compte = Compte::with('client')->findOrFail($id);
+
+            // Vérifier si l'utilisateur est admin ou client
+            $user = auth()->user();
+
+            if (!$user) {
+                return $this->errorResponse('Non authentifié', 401);
+            }
+
+            // Vérifier si l'utilisateur est admin (par email dans la table admins)
+            $isAdmin = Admin::where('email', $user->email)->exists();
+
+            if ($isAdmin) {
+                // Admin peut voir tous les comptes
+                return $this->successResponse(
+                    $this->getCompteData($compte),
+                    'Compte récupéré avec succès',
+                    200
+                );
+            } else {
+                // Client ne peut voir que ses propres comptes
+                // Vérifier si le compte appartient au client avec le même email
+                if ($user->email !== $compte->client->email) {
+                    return $this->errorResponse('Accès refusé', 403);
+                }
+
+                return $this->successResponse(
+                    $this->getCompteData($compte),
+                    'Compte récupéré avec succès',
+                    200
+                );
+            }
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->errorResponse('Compte non trouvé', 404);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération du compte : ' . $e->getMessage(), 500);
         }
     }
 }
