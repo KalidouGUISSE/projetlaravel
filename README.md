@@ -13,7 +13,8 @@ Cette API permet de :
 ## 🚀 Fonctionnalités
 
 - ✅ Authentification via Laravel Sanctum
-- ✅ Validation des données avec des Request Classes
+- ✅ Validation des données avec des Request Classes personnalisées
+- ✅ Règles de validation personnalisées pour téléphone et NCI Sénégalais
 - ✅ Génération automatique d'UUID pour les entités
 - ✅ Génération automatique de numéros de compte uniques
 - ✅ Relations Eloquent entre Client, Compte et Transaction
@@ -21,6 +22,8 @@ Cette API permet de :
 - ✅ Interface Swagger UI interactive
 - ✅ Factories et Seeders pour les tests
 - ✅ Migrations avec index optimisés
+- ✅ Rate limiting et sécurité avancée
+- ✅ Envoi d'email et SMS simulé pour authentification
 
 ## 📋 Prérequis
 
@@ -192,10 +195,31 @@ curl -X POST http://localhost:8000/api/clients \
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
 | GET | `/api/v1/comptes` | Lister tous les comptes avec clients |
+| POST | `/api/v1/comptes` | Créer un nouveau compte (avec client si nécessaire) |
 
 #### Exemple - Lister les comptes
 ```bash
-curl http://localhost:8000/api/v1/comptes
+curl -H "Authorization: Bearer {token}" http://localhost:8001/api/v1/comptes
+```
+
+#### Exemple - Créer un compte
+```bash
+curl -X POST http://localhost:8001/api/v1/comptes \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "cheque",
+    "soldeInitial": 500000,
+    "devise": "FCFA",
+    "client": {
+      "id": null,
+      "titulaire": "Hawa BB Wane",
+      "nci": "1234567890123",
+      "email": "cheikh.sy@example.com",
+      "telephone": "+221771234567",
+      "adresse": "Dakar, Sénégal"
+    }
+  }'
 ```
 
 ## 📖 Documentation API
@@ -276,6 +300,9 @@ projetLaravel/
 │   │   ├── Client.php                    # Modèle Client
 │   │   ├── Compte.php                    # Modèle Compte
 │   │   └── Transaction.php               # Modèle Transaction
+│   ├── Rules/
+│   │   ├── SenegalPhoneRule.php         # Validation téléphone Sénégalais
+│   │   └── SenegalNciRule.php           # Validation NCI Sénégalais
 │   └── Swagger/
 │       └── OpenApiDocumentation.php     # Config OpenAPI
 ├── database/
@@ -312,11 +339,26 @@ php artisan test --filter=ClientControllerTest
 
 ## 🔒 Sécurité
 
-- **Validation des données** : Utilisation de Request Classes pour valider les entrées
+- **Validation des données** : Utilisation de Request Classes personnalisées avec règles de validation spécifiques (téléphone et NCI Sénégalais)
 - **Authentification** : Laravel Sanctum pour la protection des routes
 - **CSRF Protection** : Activée pour les formulaires web
-- **Rate Limiting** : Configurable via middleware
+- **Rate Limiting** : Configurable via middleware (60 requêtes par minute)
 - **SQL Injection** : Prévention via Eloquent ORM
+- **Validation avancée** : Règles personnalisées pour formats Sénégalais (téléphone +221, NCI 13 chiffres)
+
+## 📋 Validations Personnalisées
+
+L'API inclut des règles de validation personnalisées pour les données spécifiques au Sénégal :
+
+### Règle Téléphone Sénégalais
+- Format : `+221` suivi de 9 chiffres
+- Exemple : `+221771234567`
+- Utilisée dans : Création de client/compte
+
+### Règle NCI (Carte d'Identité)
+- Format : 13 chiffres
+- Exemple : `1234567890123`
+- Utilisée dans : Création de client/compte
 
 ## 🚀 Déploiement
 

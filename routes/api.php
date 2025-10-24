@@ -37,7 +37,12 @@ Route::prefix('v1')->group(function () {
 
     // Routes pour les comptes (avec auth et rate limiting)
     Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
-        Route::get('/comptes', [CompteController::class, 'index']);
+         Route::get('/comptes', [CompteController::class, 'index']);
+    });
+    // Routes pour les comptes (avec auth et rate limiting)
+    Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+         Route::get('/comptes', [CompteController::class, 'index']);
+         Route::post('/comptes', [CompteController::class, 'store']);
     });
 
     // Route de test pour comptes sans auth (pour tester)

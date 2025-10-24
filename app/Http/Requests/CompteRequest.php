@@ -2,6 +2,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\SenegalPhoneRule;
+use App\Rules\SenegalNciRule;
 
 class CompteRequest extends FormRequest
 {
@@ -13,24 +15,38 @@ class CompteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => 'required|exists:clients,id',
-            'type' => 'required|in:epargne,cheque',
-            'solde' => 'required|numeric|min:0',
-            'statut' => 'nullable|in:actif,bloque,ferme',
+            'type' => 'required|in:cheque,epargne',
+            'soldeInitial' => 'required|numeric|min:10000',
+            'devise' => 'required|string|in:FCFA',
+            'client' => 'required|array',
+            'client.id' => 'nullable|uuid|exists:clients,id',
+            'client.titulaire' => 'required|string|max:255',
+            'client.nci' => ['nullable', new SenegalNciRule()],
+            'client.email' => 'required|email|unique:clients,email',
+            'client.telephone' => ['required', new SenegalPhoneRule(), 'unique:clients,telephone'],
+            'client.adresse' => 'required|string|max:255',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'client_id.required' => 'Le client est obligatoire.',
-            'client_id.exists' => 'Le client sélectionné n\'existe pas.',
             'type.required' => 'Le type de compte est obligatoire.',
-            'type.in' => 'Le type de compte doit être soit "epargne", soit "cheque".',
-            'solde.required' => 'Le solde est obligatoire.',
-            'solde.numeric' => 'Le solde doit être un nombre.',
-            'solde.min' => 'Le solde doit être supérieur ou égal à 0.',
-            'statut.in' => 'Le statut doit être "actif", "bloque" ou "ferme".',
+            'type.in' => 'Le type de compte doit être "cheque" ou "epargne".',
+            'soldeInitial.required' => 'Le solde initial est obligatoire.',
+            'soldeInitial.numeric' => 'Le solde initial doit être un nombre.',
+            'soldeInitial.min' => 'Le solde initial doit être supérieur ou égal à 10000.',
+            'devise.required' => 'La devise est obligatoire.',
+            'devise.in' => 'La devise doit être FCFA.',
+            'client.required' => 'Les informations du client sont obligatoires.',
+            'client.id.exists' => 'Le client sélectionné n\'existe pas.',
+            'client.titulaire.required' => 'Le nom du titulaire est requis.',
+            'client.email.required' => 'L\'email est requis.',
+            'client.email.email' => 'L\'email doit être valide.',
+            'client.email.unique' => 'Cet email est déjà utilisé.',
+            'client.telephone.required' => 'Le téléphone est requis.',
+            'client.telephone.unique' => 'Ce numéro de téléphone est déjà utilisé.',
+            'client.adresse.required' => 'L\'adresse est requise.',
         ];
     }
 }

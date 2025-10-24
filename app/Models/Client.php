@@ -28,7 +28,7 @@ class Client extends Model
     //     // ajoute d’autres colonnes selon ta migration
     // ];
     protected $fillable = [
-        'id', 'nom', 'prenom', 'email', 'telephone'
+        'id', 'nom', 'prenom', 'titulaire', 'email', 'telephone', 'nci', 'adresse', 'password', 'code'
     ];
 
     // Relations
