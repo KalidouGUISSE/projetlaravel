@@ -13,12 +13,7 @@ class SwaggerController extends Controller
             $openapi = Generator::scan([app_path('Http/Controllers'), app_path('Swagger')]);
             // Mettre à jour l'URL du serveur de manière dynamique depuis les variables d'environnement
             if (isset($openapi->servers) && count($openapi->servers) > 0) {
-                $baseUrl = env('APP_ENV') === 'local' ? env('APP_URL') : env('APP_URL_PROD');
-                // Forcer HTTPS en production
-                if (env('APP_ENV') !== 'local') {
-                    $baseUrl = str_replace('http://', 'https://', $baseUrl);
-                }
-                $openapi->servers[0]->url = $baseUrl . '/api/v1';
+                $openapi->servers[0]->url = 'https://projetlaravel-3.onrender.com/api/v1';
             }
             return response()->json($openapi);
         } catch (\Exception $e) {
