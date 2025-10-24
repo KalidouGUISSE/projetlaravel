@@ -193,6 +193,16 @@ class CompteController extends Controller
             $client = null;
             if ($data['client']['id']) {
                 $client = Client::find($data['client']['id']);
+                // Si le client existe mais que des champs sont fournis, les mettre à jour
+                if ($client && (!empty($data['client']['titulaire']) || !empty($data['client']['email']) || !empty($data['client']['telephone']) || !empty($data['client']['adresse']))) {
+                    $client->update(array_filter([
+                        'titulaire' => $data['client']['titulaire'] ?: $client->titulaire,
+                        'email' => $data['client']['email'] ?: $client->email,
+                        'telephone' => $data['client']['telephone'] ?: $client->telephone,
+                        'adresse' => $data['client']['adresse'] ?: $client->adresse,
+                        'nci' => $data['client']['nci'] ?: $client->nci,
+                    ]));
+                }
             } else {
                 // Chercher par email ou téléphone
                 $client = Client::where('email', $data['client']['email'])->orWhere('telephone', $data['client']['telephone'])->first();
@@ -216,10 +226,13 @@ class CompteController extends Controller
                     'code' => $code,
                 ]);
 
-                // Envoyer email avec mot de passe
-                Mail::raw("Votre mot de passe est : {$password}", function ($message) use ($client) {
-                    $message->to($client->email)->subject('Mot de passe de connexion');
-                });
+                // Envoyer email avec mot de passe (désactivé pour les tests)
+                // Mail::raw("Votre mot de passe est : {$password}", function ($message) use ($client) {
+                //     $message->to($client->email)->subject('Mot de passe de connexion');
+                // });
+
+                // Log temporaire au lieu d'envoyer l'email
+                Log::info("Email non envoyé - Mot de passe pour {$client->email} : {$password}");
 
                 // Envoyer SMS avec code (simulation)
                 // Ici, utiliser un service SMS réel, pour l'instant log

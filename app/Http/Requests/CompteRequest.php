@@ -14,17 +14,19 @@ class CompteRequest extends FormRequest
 
     public function rules(): array
     {
+        $clientId = $this->input('client.id');
+
         return [
             'type' => 'required|in:cheque,epargne',
             'soldeInitial' => 'required|numeric|min:10000',
             'devise' => 'required|string|in:FCFA',
             'client' => 'required|array',
             'client.id' => 'nullable|uuid|exists:clients,id',
-            'client.titulaire' => 'required|string|max:255',
+            'client.titulaire' => $clientId ? 'nullable|string|max:255' : 'required|string|max:255',
             'client.nci' => ['nullable', new SenegalNciRule()],
-            'client.email' => 'required|email|unique:clients,email',
-            'client.telephone' => ['required', new SenegalPhoneRule(), 'unique:clients,telephone'],
-            'client.adresse' => 'required|string|max:255',
+            'client.email' => $clientId ? 'nullable|email|unique:clients,email,' . $clientId : 'required|email|unique:clients,email',
+            'client.telephone' => $clientId ? ['nullable', new SenegalPhoneRule(), 'unique:clients,telephone,' . $clientId] : ['required', new SenegalPhoneRule(), 'unique:clients,telephone'],
+            'client.adresse' => $clientId ? 'nullable|string|max:255' : 'required|string|max:255',
         ];
     }
 

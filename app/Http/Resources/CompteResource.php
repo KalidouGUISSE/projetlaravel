@@ -14,8 +14,8 @@ class CompteResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // Calcul du solde
-        $solde = 0;
+        // Calcul du solde réel basé sur les transactions
+        $solde = $this->solde; // Solde de base du modèle
         if ($this->transactions) {
             $debits = $this->transactions->where('statut', 'validee')
                           ->whereIn('type', ['retrait', 'virement', 'frais'])
@@ -23,7 +23,7 @@ class CompteResource extends JsonResource
             $credits = $this->transactions->where('statut', 'validee')
                            ->where('type', 'depot')
                            ->sum('montant');
-            $solde = $credits - $debits;
+            $solde = $this->solde + ($credits - $debits);
         }
 
         return [

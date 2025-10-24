@@ -44,7 +44,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/comptes-test', [CompteController::class, 'index']);
 
     // Routes pour les admins (sans auth)
-    Route::apiResource('admins', AdminController::class)->except(['index', 'show', 'update', 'destroy']);
+    Route::apiResource('admins', AdminController::class);
     Route::get('/admins/comptes', [AdminController::class, 'getAllComptes']);
 
 });

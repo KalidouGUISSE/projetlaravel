@@ -3,16 +3,15 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Rules\SenegalNciRule;
+use Illuminate\Validation\Rule;
 
-class StoreClientRequest extends FormRequest
+class UpdateAdminRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        // true si tout utilisateur peut créer un client
         return true;
     }
 
@@ -23,25 +22,27 @@ class StoreClientRequest extends FormRequest
      */
     public function rules(): array
     {
+        $adminId = $this->route('admin');
+
         return [
-            'nom'       => 'required|string|max:255',
-            'prenom'    => 'required|string|max:255',
+            'nom'       => 'sometimes|required|string|max:255',
+            'prenom'    => 'sometimes|required|string|max:255',
             'email'     => [
+                'sometimes',
                 'required',
                 'email',
-                'unique:clients,email',
-                \Illuminate\Validation\Rule::unique('admins', 'email')->ignore($this->route('client')) // Email unique entre clients et admins
+                'unique:admins,email,' . $adminId,
+                Rule::unique('clients', 'email')->ignore($adminId, 'id') // Email unique entre clients et admins
             ],
             'telephone' => [
+                'sometimes',
                 'required',
                 'string',
                 'min:9',
                 'max:15',
-                'unique:clients,telephone',
-                \Illuminate\Validation\Rule::unique('admins', 'telephone')->ignore($this->route('client')) // Téléphone unique entre clients et admins
+                'unique:admins,telephone,' . $adminId,
+                Rule::unique('clients', 'telephone')->ignore($adminId, 'id') // Téléphone unique entre clients et admins
             ],
-            'adresse'   => 'nullable|string|max:255',
-            'nci'       => ['nullable', new SenegalNciRule()],
         ];
     }
 
@@ -54,6 +55,7 @@ class StoreClientRequest extends FormRequest
             'email.email'        => 'Veuillez saisir un email valide.',
             'email.unique'       => 'Cet email est déjà utilisé.',
             'telephone.required' => 'Le numéro de téléphone est obligatoire.',
+            'telephone.unique'   => 'Ce numéro de téléphone est déjà utilisé.',
         ];
     }
 }
