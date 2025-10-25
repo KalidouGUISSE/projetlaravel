@@ -20,7 +20,7 @@ class CompteController extends Controller
 {
     use ApiResponseTrait;
     #[OA\Get(
-        path: "/v1/comptes",
+        path: "/comptes",
         summary: "Lister les comptes avec pagination et filtres",
         description: "Retourne la liste des comptes avec support pour la pagination, le tri et les filtres.",
         tags: ["Comptes"],
@@ -28,7 +28,7 @@ class CompteController extends Controller
             new OA\Parameter(
                 name: "client_id",
                 in: "query",
-                required: true,
+                required: false,
                 description: "ID du client pour filtrer les comptes",
                 schema: new OA\Schema(type: "string", format: "uuid", example: "72f09e5b-e8f0-42e7-87c9-b2a8cb281adb")
             ),
@@ -136,7 +136,7 @@ class CompteController extends Controller
     }
 
     #[OA\Post(
-        path: "/v1/comptes",
+        path: "/comptes",
         summary: "Créer un nouveau compte",
         description: "Crée un nouveau compte pour un client, en créant le client si nécessaire. Requiert une authentification.",
         security: [
@@ -279,7 +279,7 @@ class CompteController extends Controller
     }
 
     #[OA\Get(
-        path: "/v1/comptes/{id}",
+        path: "/comptes/{id}",
         summary: "Récupérer un compte spécifique",
         description: "Admin peut récupérer n'importe quel compte. Client peut récupérer seulement ses propres comptes.",
         security: [

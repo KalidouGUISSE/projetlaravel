@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "https://projetlaravel-3.onrender.com/api",
+            "url": "/api/v1",
             "description": "Serveur de production"
         }
     ],
@@ -196,7 +196,7 @@
                 }
             }
         },
-        "/v1/comptes": {
+        "/comptes": {
             "get": {
                 "tags": [
                     "Comptes"
@@ -774,19 +774,19 @@
                         "properties": {
                             "self": {
                                 "type": "string",
-                                "example": "https://projetlaravel-3.onrender.com/api/v1/comptes?page=1"
+                                "example": "/api/v1/comptes?page=1"
                             },
                             "first": {
                                 "type": "string",
-                                "example": "https://projetlaravel-3.onrender.com/api/v1/comptes?page=1"
+                                "example": "/api/v1/comptes?page=1"
                             },
                             "last": {
                                 "type": "string",
-                                "example": "https://projetlaravel-3.onrender.com/api/v1/comptes?page=5"
+                                "example": "/api/v1/comptes?page=5"
                             },
                             "next": {
                                 "type": "string",
-                                "example": "https://projetlaravel-3.onrender.com/api/v1/comptes?page=2",
+                                "example": "/api/v1/comptes?page=2",
                                 "nullable": true
                             },
                             "previous": {
