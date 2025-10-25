@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SwaggerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,3 +17,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/api/documentation', [SwaggerController::class, 'ui'])->name('swagger.ui');
+Route::get('/api/docs.json', [SwaggerController::class, 'json'])->name('swagger.json');
