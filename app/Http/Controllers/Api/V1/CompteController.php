@@ -119,7 +119,33 @@ class CompteController extends Controller
             $query = Compte::with('client');
         }
 
-        // Utiliser le trait pour la pagination, mais transformer avec CompteResource
+        // Appliquer les filtres
+        if ($request->has('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->has('statut')) {
+            $query->where('statut', $request->statut);
+        }
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('numeroCompte', 'like', '%' . $search . '%')
+                  ->orWhereHas('client', function($clientQuery) use ($search) {
+                      $clientQuery->where('titulaire', 'like', '%' . $search . '%')
+                                  ->orWhere('nom', 'like', '%' . $search . '%')
+                                  ->orWhere('prenom', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        // Appliquer le tri
+        $sort = $request->get('sort', 'created_at');
+        $order = $request->get('order', 'desc');
+        $query->orderBy($sort, $order);
+
+        // Pagination
         $paginated = $query->paginate($request->get('limit', 10));
 
         return response()->json([
