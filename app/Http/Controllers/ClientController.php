@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Http\Requests\StoreClientRequest;
+use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
 use App\Http\Resources\ClientResource;
+use Illuminate\Support\Facades\Hash;
 use OpenApi\Attributes as OA;
 
 class ClientController extends Controller
@@ -208,7 +210,14 @@ class ClientController extends Controller
     #[OA\Put(
         path: "/clients/{id}",
         summary: "Mettre à jour un client",
-        description: "Met à jour les informations d'un client existant.",
+        description: "Met à jour les informations d'un client existant. Tous les champs sont optionnels, mais au moins un doit être modifié.",
+        security: [
+            new OA\SecurityScheme(
+                securityScheme: "bearerAuth",
+                type: "http",
+                scheme: "bearer"
+            )
+        ],
         tags: ["Clients"],
         parameters: [
             new OA\Parameter(
@@ -216,18 +225,65 @@ class ClientController extends Controller
                 in: "path",
                 required: true,
                 description: "ID du client",
-                schema: new OA\Schema(type: "string")
+                schema: new OA\Schema(type: "string", format: "uuid")
             )
         ],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(ref: "#/components/schemas/ClientUpdateRequest")
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "titulaire", type: "string", description: "Nom du titulaire", example: "Fatou Ndiaye"),
+                    new OA\Property(
+                        property: "informationsClient",
+                        type: "object",
+                        properties: [
+                            new OA\Property(property: "telephone", type: "string", description: "Numéro de téléphone portable Sénégalais (+221XXXXXXXXX)", example: "+221781234567"),
+                            new OA\Property(property: "email", type: "string", format: "email", example: "fatou.ndiaye@example.com"),
+                            new OA\Property(property: "password", type: "string", minLength: 8, example: "monNouveauMotDePasse2025"),
+                            new OA\Property(property: "nci", type: "string", description: "Numéro de Carte d'Identité (13 chiffres)", example: "9876543210987")
+                        ]
+                    )
+                ],
+                type: "object",
+                example: [
+                    "titulaire" => "Fatou Ndiaye",
+                    "informationsClient" => [
+                        "telephone" => "+221781234567",
+                        "email" => "fatou.ndiaye@example.com",
+                        "password" => "monNouveauMotDePasse2025",
+                        "nci" => "9876543210987"
+                    ]
+                ]
+            )
         ),
         responses: [
             new OA\Response(
                 response: 200,
                 description: "Client mis à jour avec succès",
-                content: new OA\JsonContent(ref: "#/components/schemas/ClientResponse")
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: true),
+                        new OA\Property(property: "message", type: "string", example: "Client mis à jour avec succès"),
+                        new OA\Property(property: "data", ref: "#/components/schemas/Client")
+                    ],
+                    type: "object"
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: "Aucun champ modifié",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: false),
+                        new OA\Property(property: "message", type: "string", example: "Au moins un champ doit être modifié")
+                    ],
+                    type: "object"
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: "Non authentifié",
+                content: new OA\JsonContent(ref: "#/components/schemas/UnauthorizedErrorResponse")
             ),
             new OA\Response(
                 response: 404,
@@ -249,13 +305,44 @@ class ClientController extends Controller
     /**
      * Mettre à jour les informations d’un client.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateClientRequest $request, string $id)
     {
         $client = Client::findOrFail($id);
-        $client->update($request->all());
+
+        $updateData = [];
+
+        // Mettre à jour le titulaire si fourni
+        if ($request->has('titulaire')) {
+            $updateData['titulaire'] = $request->titulaire;
+        }
+
+        // Mettre à jour les informations du client si fournies
+        if ($request->has('informationsClient')) {
+            $info = $request->informationsClient;
+
+            if (isset($info['telephone'])) {
+                $updateData['telephone'] = $info['telephone'];
+            }
+
+            if (isset($info['email'])) {
+                $updateData['email'] = $info['email'];
+            }
+
+            if (isset($info['password'])) {
+                $updateData['password'] = Hash::make($info['password']);
+            }
+
+            if (isset($info['nci'])) {
+                $updateData['nci'] = $info['nci'];
+            }
+        }
+
+        // Mettre à jour le client
+        $client->update($updateData);
 
         return response()->json([
-            'message' => 'Client mis à jour avec succès !',
+            'success' => true,
+            'message' => 'Client mis à jour avec succès',
             'data'    => new ClientResource($client),
         ], 200);
     }

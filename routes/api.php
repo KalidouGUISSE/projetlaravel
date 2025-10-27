@@ -31,7 +31,11 @@ Route::prefix('v1')->group(function () {
     });
 
     // Routes pour les clients (sans auth)
-    Route::apiResource('clients', ClientController::class);
+    Route::get('/clients', [ClientController::class, 'index']);
+    Route::post('/clients', [ClientController::class, 'store']);
+    Route::get('/clients/{id}', [ClientController::class, 'show']);
+    Route::put('/clients/{id}', [ClientController::class, 'update'])->middleware(\App\Http\Middleware\LoggingMiddleware::class);
+    Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
 
     // Routes pour les comptes (sans auth)
     Route::get('/comptes', [CompteController::class, 'index']);
