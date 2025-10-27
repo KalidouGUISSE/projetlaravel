@@ -347,6 +347,236 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Créer un nouveau compte",
+                "description": "Crée un nouveau compte pour un client, en créant le client si nécessaire. Le solde est calculé dynamiquement à partir des transactions.",
+                "operationId": "createCompte",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "soldeInitial",
+                                    "devise",
+                                    "client"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cheque",
+                                            "epargne"
+                                        ],
+                                        "example": "cheque"
+                                    },
+                                    "soldeInitial": {
+                                        "type": "number",
+                                        "minimum": 10000,
+                                        "example": 500000
+                                    },
+                                    "devise": {
+                                        "type": "string",
+                                        "example": "FCFA"
+                                    },
+                                    "client": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "string",
+                                                "format": "uuid",
+                                                "nullable": true,
+                                                "example": null
+                                            },
+                                            "titulaire": {
+                                                "type": "string",
+                                                "example": "Cheikh Sy"
+                                            },
+                                            "nci": {
+                                                "type": "string",
+                                                "description": "Numéro de Carte d'Identité (13 chiffres)",
+                                                "example": "1234567890123"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "example": "cheikh.sy@example.com"
+                                            },
+                                            "telephone": {
+                                                "type": "string",
+                                                "description": "Numéro de téléphone portable Sénégalais (+221XXXXXXXXX)",
+                                                "example": "+221771234567"
+                                            },
+                                            "adresse": {
+                                                "type": "string",
+                                                "example": "Dakar, Sénégal"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Compte créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Compte créé avec succès"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "format": "uuid",
+                                                    "example": "660f9511-f30c-52e5-b827-557766551111"
+                                                },
+                                                "numeroCompte": {
+                                                    "type": "string",
+                                                    "example": "C00123460"
+                                                },
+                                                "titulaire": {
+                                                    "type": "string",
+                                                    "example": "Cheikh Sy"
+                                                },
+                                                "type": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "cheque",
+                                                        "epargne"
+                                                    ],
+                                                    "example": "cheque"
+                                                },
+                                                "solde": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "description": "Solde calculé à partir des transactions",
+                                                    "example": 500000
+                                                },
+                                                "devise": {
+                                                    "type": "string",
+                                                    "example": "FCFA"
+                                                },
+                                                "dateCreation": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-10-19T10:30:00Z"
+                                                },
+                                                "statut": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "actif",
+                                                        "bloque",
+                                                        "ferme"
+                                                    ],
+                                                    "example": "actif"
+                                                },
+                                                "codeConnexion": {
+                                                    "type": "string",
+                                                    "description": "Code pour la première connexion (seulement pour nouveaux clients)",
+                                                    "example": "ABC123",
+                                                    "nullable": true
+                                                },
+                                                "metadata": {
+                                                    "properties": {
+                                                        "derniereModification": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-10-19T10:30:00Z"
+                                                        },
+                                                        "version": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Données invalides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error": {
+                                            "properties": {
+                                                "code": {
+                                                    "type": "string",
+                                                    "example": "VALIDATION_ERROR"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Les données fournies sont invalides"
+                                                },
+                                                "details": {
+                                                    "properties": {
+                                                        "titulaire": {
+                                                            "type": "string",
+                                                            "example": "Le nom du titulaire est requis"
+                                                        },
+                                                        "soldeInitial": {
+                                                            "type": "string",
+                                                            "example": "Le solde initial doit être supérieur ou égal à 10000"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors de la création du compte"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/clients": {
