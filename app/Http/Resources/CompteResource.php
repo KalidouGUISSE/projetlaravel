@@ -35,6 +35,7 @@ class CompteResource extends JsonResource
             'statut' => $this->statut,
             'dateCreation' => $this->created_at->toISOString(),
             'dateModification' => $this->updated_at->toISOString(),
+            'dateFermeture' => $this->deleted_at ? $this->deleted_at->toISOString() : null,
             'client' => new ClientResource($this->whenLoaded('client')),
             'metadata' => $this->metadata,
         ];

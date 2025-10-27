@@ -372,4 +372,78 @@ class CompteController extends Controller
             return $this->errorResponse('Erreur lors de la récupération du compte : ' . $e->getMessage(), 500);
         }
     }
+
+    #[OA\Delete(
+        path: "/comptes/{id}",
+        summary: "Supprimer un compte (soft delete)",
+        description: "Effectue une suppression douce du compte en changeant le statut à 'ferme' et en définissant la date de fermeture.",
+        security: [
+            new OA\SecurityScheme(
+                securityScheme: "bearerAuth",
+                type: "http",
+                scheme: "bearer"
+            )
+        ],
+        tags: ["Comptes"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID du compte à supprimer",
+                schema: new OA\Schema(type: "string", format: "uuid")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Compte supprimé avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: true),
+                        new OA\Property(property: "message", type: "string", example: "Compte supprimé avec succès"),
+                        new OA\Property(property: "data", properties: [
+                            new OA\Property(property: "id", type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000"),
+                            new OA\Property(property: "numeroCompte", type: "string", example: "C00123456"),
+                            new OA\Property(property: "statut", type: "string", example: "ferme"),
+                            new OA\Property(property: "dateFermeture", type: "string", format: "date-time", example: "2025-10-19T11:15:00Z")
+                        ], type: "object")
+                    ],
+                    type: "object"
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: "Compte non trouvé",
+                content: new OA\JsonContent(ref: "#/components/schemas/NotFoundErrorResponse")
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Erreur serveur",
+                content: new OA\JsonContent(ref: "#/components/schemas/ErrorResponse")
+            )
+        ]
+    )]
+    public function destroy(string $id)
+    {
+        try {
+            $compte = Compte::findOrFail($id);
+
+            // Effectuer le soft delete
+            $compte->delete();
+
+            // Retourner les données mises à jour
+            return $this->successResponse([
+                'id' => $compte->id,
+                'numeroCompte' => $compte->numeroCompte,
+                'statut' => $compte->statut,
+                'dateFermeture' => $compte->deleted_at->toISOString(),
+            ], 'Compte supprimé avec succès', 200);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->errorResponse('Compte non trouvé', 404);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la suppression du compte : ' . $e->getMessage(), 500);
+        }
+    }
 }

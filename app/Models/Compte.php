@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Compte extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $keyType = 'string';
     public $incrementing = false;
@@ -28,6 +29,7 @@ class Compte extends Model
     protected $casts = [
         'metadata' => 'array',
         'solde' => 'float',
+        'deleted_at' => 'datetime',
     ];
 
     public function client()
@@ -64,6 +66,13 @@ class Compte extends Model
                     'version' => 1
                 ];
             }
+        });
+
+        static::deleting(function ($compte) {
+            // Avant la suppression, changer le statut à "ferme" et définir deleted_at
+            $compte->statut = 'ferme';
+            $compte->deleted_at = now();
+            $compte->save();
         });
     }
 
