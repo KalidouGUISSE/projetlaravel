@@ -880,7 +880,7 @@
                     },
                     "telephone": {
                         "type": "string",
-                        "example": "+1-201-736-0670"
+                        "example": "+221789987646"
                     },
                     "created_at": {
                         "type": "string",
