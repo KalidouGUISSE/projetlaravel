@@ -7,8 +7,8 @@
     },
     "servers": [
         {
-            "url": "/api/v1",
-            "description": "Serveur de production"
+            "url": "http://localhost:8000/guisse/v1",
+            "description": "Serveur de développement"
         }
     ],
     "paths": {
@@ -731,8 +731,13 @@
                     "Clients"
                 ],
                 "summary": "Mettre à jour un client",
-                "description": "Met à jour les informations d'un client existant.",
-                "operationId": "162fed3ea25bb60bf0b156c7b21313e6",
+                "description": "Met à jour les informations d'un client existant. Tous les champs sont optionnels, mais au moins un doit être modifié.",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "operationId": "updateClient",
                 "parameters": [
                     {
                         "name": "id",
@@ -740,7 +745,8 @@
                         "description": "ID du client",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     }
                 ],
@@ -749,7 +755,48 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/ClientUpdateRequest"
+                                "properties": {
+                                    "titulaire": {
+                                        "type": "string",
+                                        "description": "Nom du titulaire",
+                                        "example": "Fatou Ndiaye"
+                                    },
+                                    "informationsClient": {
+                                        "type": "object",
+                                        "properties": {
+                                            "telephone": {
+                                                "type": "string",
+                                                "description": "Numéro de téléphone portable Sénégalais (+221XXXXXXXXX)",
+                                                "example": "+221781234567"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "example": "fatou.ndiaye@example.com"
+                                            },
+                                            "password": {
+                                                "type": "string",
+                                                "minLength": 8,
+                                                "example": "monNouveauMotDePasse2025"
+                                            },
+                                            "nci": {
+                                                "type": "string",
+                                                "description": "Numéro de Carte d'Identité (13 chiffres)",
+                                                "example": "9876543210987"
+                                            }
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "example": {
+                                "titulaire": "Fatou Ndiaye",
+                                "informationsClient": {
+                                    "telephone": "+221781234567",
+                                    "email": "fatou.ndiaye@example.com",
+                                    "password": "monNouveauMotDePasse2025",
+                                    "nci": "9876543210987"
+                                }
                             }
                         }
                     }
@@ -760,7 +807,50 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ClientResponse"
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Client mis à jour avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Client"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Aucun champ modifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Au moins un champ doit être modifié"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedErrorResponse"
                                 }
                             }
                         }
@@ -873,6 +963,10 @@
                         "type": "string",
                         "example": "Laury"
                     },
+                    "titulaire": {
+                        "type": "string",
+                        "example": "Kilback Laury"
+                    },
                     "email": {
                         "type": "string",
                         "format": "email",
@@ -880,14 +974,23 @@
                     },
                     "telephone": {
                         "type": "string",
-                        "example": "+1-201-736-0670"
+                        "example": "+221771234567"
                     },
-                    "created_at": {
+                    "nci": {
+                        "type": "string",
+                        "description": "Numéro de Carte d'Identité (13 chiffres)",
+                        "example": "1234567890123"
+                    },
+                    "adresse": {
+                        "type": "string",
+                        "example": "Dakar, Sénégal"
+                    },
+                    "dateCreation": {
                         "type": "string",
                         "format": "date-time",
                         "example": "2025-10-22T11:37:37.000000Z"
                     },
-                    "updated_at": {
+                    "dateModification": {
                         "type": "string",
                         "format": "date-time",
                         "example": "2025-10-22T11:37:37.000000Z"
@@ -1072,25 +1175,47 @@
             },
             "ClientUpdateRequest": {
                 "properties": {
-                    "nom": {
+                    "titulaire": {
                         "type": "string",
-                        "example": "Kilback"
+                        "description": "Nom du titulaire",
+                        "example": "Fatou Ndiaye"
                     },
-                    "prenom": {
-                        "type": "string",
-                        "example": "Laury"
-                    },
-                    "email": {
-                        "type": "string",
-                        "format": "email",
-                        "example": "brigitte.kuhn@example.net"
-                    },
-                    "telephone": {
-                        "type": "string",
-                        "example": "+1-201-736-0670"
+                    "informationsClient": {
+                        "type": "object",
+                        "properties": {
+                            "telephone": {
+                                "type": "string",
+                                "description": "Numéro de téléphone portable Sénégalais (+221XXXXXXXXX)",
+                                "example": "+221781234567"
+                            },
+                            "email": {
+                                "type": "string",
+                                "format": "email",
+                                "example": "fatou.ndiaye@example.com"
+                            },
+                            "password": {
+                                "type": "string",
+                                "minLength": 8,
+                                "example": "monNouveauMotDePasse2025"
+                            },
+                            "nci": {
+                                "type": "string",
+                                "description": "Numéro de Carte d'Identité (13 chiffres)",
+                                "example": "9876543210987"
+                            }
+                        }
                     }
                 },
-                "type": "object"
+                "type": "object",
+                "example": {
+                    "titulaire": "Fatou Ndiaye",
+                    "informationsClient": {
+                        "telephone": "+221781234567",
+                        "email": "fatou.ndiaye@example.com",
+                        "password": "monNouveauMotDePasse2025",
+                        "nci": "9876543210987"
+                    }
+                }
             },
             "ErrorResponse": {
                 "properties": {
