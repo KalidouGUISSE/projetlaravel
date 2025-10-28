@@ -176,7 +176,7 @@ class CompteController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ["type", "soldeInitial", "devise", "client"],
+                required: ["type", "soldeInitial", "devise", "client", "client.nci"],
                 properties: [
                     new OA\Property(property: "type", type: "string", enum: ["cheque", "epargne"], example: "cheque"),
                     new OA\Property(property: "soldeInitial", type: "number", minimum: 10000, example: 500000),
@@ -184,7 +184,7 @@ class CompteController extends Controller
                     new OA\Property(property: "client", type: "object", properties: [
                         new OA\Property(property: "id", type: "string", format: "uuid", nullable: true, example: null),
                         new OA\Property(property: "titulaire", type: "string", example: "Hawa BB Wane"),
-                        new OA\Property(property: "nci", type: "string", example: ""),
+                        new OA\Property(property: "nci", type: "string", example: "1234567890123"),
                         new OA\Property(property: "email", type: "string", format: "email", example: "cheikh.sy@example.com"),
                         new OA\Property(property: "telephone", type: "string", example: "+221771234567"),
                         new OA\Property(property: "adresse", type: "string", example: "Dakar, Sénégal")
