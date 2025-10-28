@@ -15,6 +15,7 @@ use App\Http\Requests\BloquerCompteRequest;
 use App\Http\Requests\DebloquerCompteRequest;
 use App\Http\Requests\BloquerComptesJobRequest;
 use App\Jobs\BloquerComptesJob;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -371,7 +372,34 @@ class CompteController extends Controller
     public function show(string $id)
     {
         try {
-            $compte = Compte::with('client')->findOrFail($id);
+            $compte = Compte::with('client')->find($id);
+
+            // Si le compte n'existe pas dans la DB principale, chercher dans l'archive
+            if (!$compte) {
+                $archivedCompte = DB::connection('archive')->table('comptes')->where('id', $id)->first();
+
+                if ($archivedCompte) {
+                    // Retourner les données de l'archive
+                    return $this->successResponse([
+                        'id' => $archivedCompte->id,
+                        'numeroCompte' => $archivedCompte->numeroCompte,
+                        'client_id' => $archivedCompte->client_id,
+                        'type' => $archivedCompte->type,
+                        'solde' => (float) $archivedCompte->solde,
+                        'statut' => $archivedCompte->statut,
+                        'metadata' => json_decode($archivedCompte->metadata, true),
+                        'motifBlocage' => $archivedCompte->motifBlocage,
+                        'date_debut_blocage' => $archivedCompte->date_debut_blocage,
+                        'date_fin_blocage' => $archivedCompte->date_fin_blocage,
+                        'created_at' => $archivedCompte->created_at,
+                        'updated_at' => $archivedCompte->updated_at,
+                        'deleted_at' => $archivedCompte->deleted_at,
+                        'source' => 'archive' // Indiquer que c'est depuis l'archive
+                    ], 'Compte récupéré depuis l\'archive avec succès', 200);
+                }
+
+                return $this->errorResponse('Compte non trouvé', 404);
+            }
 
             // Retourner directement les données du compte sans vérifications d'auth
             return $this->successResponse(
@@ -661,9 +689,9 @@ class CompteController extends Controller
                 $dateDebut = Carbon::parse($data['date_debut']);
                 $dateFin = Carbon::parse($data['date_fin']);
             } else {
-                // Blocage avec durée relative
-                $dateDebut = now();
-                $dateFin = $this->calculerDateFinBlocage($data['duree'], $data['unite']);
+                // Blocage avec durée relative basée sur date_debut
+                $dateDebut = isset($data['date_debut']) ? Carbon::parse($data['date_debut']) : now();
+                $dateFin = $this->calculerDateFinBlocage($data['duree'], $data['unite'] ?? 'jours');
             }
 
             // Bloquer le compte
@@ -680,6 +708,9 @@ class CompteController extends Controller
             $metadata['version'] = ($metadata['version'] ?? 1) + 1;
             $compte->metadata = $metadata;
             $compte->save();
+
+            // Archiver le compte vers Neon après blocage
+            $this->archiverVersNeon($compte);
 
             return $this->successResponse([
                 'id' => $compte->id,
@@ -760,6 +791,9 @@ class CompteController extends Controller
             }
 
             $data = $request->validated();
+
+            // Supprimer le compte de l'archive Neon s'il existe
+            $this->supprimerDeNeon($id);
 
             // Débloquer le compte
             $compte->update([
@@ -884,6 +918,49 @@ class CompteController extends Controller
                 return $dateFin->addYears($duree);
             default:
                 throw new \InvalidArgumentException("Unité de temps invalide: {$unite}");
+        }
+    }
+
+    /**
+     * Archiver un compte vers la base Neon
+     */
+    private function archiverVersNeon(Compte $compte): void
+    {
+        try {
+            DB::connection('archive')->table('comptes')->insert([
+                'id' => $compte->id,
+                'numeroCompte' => $compte->numeroCompte,
+                'client_id' => $compte->client_id,
+                'type' => $compte->type,
+                'solde' => $compte->solde,
+                'statut' => $compte->statut,
+                'metadata' => json_encode($compte->metadata),
+                'motifBlocage' => $compte->motifBlocage,
+                'date_debut_blocage' => $compte->date_debut_blocage,
+                'date_fin_blocage' => $compte->date_fin_blocage,
+                'created_at' => $compte->created_at,
+                'updated_at' => $compte->updated_at,
+                'deleted_at' => null,
+            ]);
+
+            Log::info("Compte archivé vers Neon lors du blocage: {$compte->numeroCompte}");
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de l'archivage du compte {$compte->numeroCompte}: " . $e->getMessage());
+            // Ne pas throw l'exception pour ne pas bloquer le blocage
+        }
+    }
+
+    /**
+     * Supprimer un compte de la base Neon
+     */
+    private function supprimerDeNeon(string $compteId): void
+    {
+        try {
+            DB::connection('archive')->table('comptes')->where('id', $compteId)->delete();
+            Log::info("Compte supprimé de Neon lors du déblocage: {$compteId}");
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de la suppression du compte {$compteId} de Neon: " . $e->getMessage());
+            // Ne pas throw l'exception pour ne pas bloquer le déblocage
         }
     }
 }

@@ -36,17 +36,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([
-        //     ClientSeeder::class,
-        // ]);
-        
-        // Créer 10 clients avec 2 comptes chacun et 5 transactions par compte
+        $this->call([
+            ClientSeeder::class,
+            CompteSeeder::class,
+        ]);
+
+        // Créer des comptes supplémentaires avec les factories pour plus de variété
+        // Créer 5 clients avec 1-3 comptes chacun et quelques transactions
         Client::factory()
-            ->count(10)
+            ->count(5)
             ->has(
                 Compte::factory()
-                    ->count(2)
-                    ->has(Transaction::factory()->count(5), 'transactions'),
+                    ->count(rand(1, 3))
+                    ->has(Transaction::factory()->count(rand(2, 5)), 'transactions'),
                 'comptes'
             )
             ->create();
