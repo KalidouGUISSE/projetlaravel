@@ -13,6 +13,8 @@ use App\Http\Requests\CompteRequest;
 use App\Http\Requests\UpdateCompteRequest;
 use App\Http\Requests\BloquerCompteRequest;
 use App\Http\Requests\DebloquerCompteRequest;
+use App\Http\Requests\BloquerComptesJobRequest;
+use App\Jobs\BloquerComptesJob;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -775,6 +777,80 @@ class CompteController extends Controller
             return $this->errorResponse('Compte non trouvé', 404);
         } catch (\Exception $e) {
             return $this->errorResponse('Erreur lors du déblocage du compte : ' . $e->getMessage(), 500);
+        }
+    }
+
+    #[OA\Post(
+        path: "/comptes/bloquer-job",
+        summary: "Bloquer plusieurs comptes via un Job",
+        description: "Lance un job pour bloquer plusieurs comptes épargne actifs avec un motif et une durée spécifiée.",
+        security: [
+            new OA\SecurityScheme(
+                securityScheme: "bearerAuth",
+                type: "http",
+                scheme: "bearer"
+            )
+        ],
+        tags: ["Comptes"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["compte_ids", "motif", "duree", "unite"],
+                properties: [
+                    new OA\Property(property: "compte_ids", type: "array", items: new OA\Items(type: "string", format: "uuid"), example: ["550e8400-e29b-41d4-a716-446655440000"]),
+                    new OA\Property(property: "motif", type: "string", example: "Activité suspecte détectée"),
+                    new OA\Property(property: "duree", type: "integer", example: 30),
+                    new OA\Property(property: "unite", type: "string", enum: ["jour", "jours", "semaine", "semaines", "mois", "annee", "annees"], example: "mois")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 202,
+                description: "Job de blocage lancé avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: true),
+                        new OA\Property(property: "message", type: "string", example: "Job de blocage lancé avec succès"),
+                        new OA\Property(property: "data", properties: [
+                            new OA\Property(property: "job_id", type: "string", example: "job_123456"),
+                            new OA\Property(property: "comptes_count", type: "integer", example: 5)
+                        ], type: "object")
+                    ],
+                    type: "object"
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: "Données invalides",
+                content: new OA\JsonContent(ref: "#/components/schemas/ValidationErrorResponse")
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Erreur serveur",
+                content: new OA\JsonContent(ref: "#/components/schemas/ErrorResponse")
+            )
+        ]
+    )]
+    public function bloquerViaJob(BloquerComptesJobRequest $request)
+    {
+        try {
+            $data = $request->validated();
+
+            // Dispatcher le job
+            BloquerComptesJob::dispatch(
+                $data['compte_ids'],
+                $data['motif'],
+                $data['duree'],
+                $data['unite']
+            );
+
+            return $this->successResponse([
+                'comptes_count' => count($data['compte_ids'])
+            ], 'Job de blocage lancé avec succès', 202);
+
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors du lancement du job de blocage : ' . $e->getMessage(), 500);
         }
     }
 

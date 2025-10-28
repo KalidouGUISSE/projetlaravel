@@ -51,6 +51,9 @@ Route::prefix('v1')->group(function () {
     // Route de test pour comptes sans auth (pour tester)
     Route::get('/comptes-test', [CompteController::class, 'index']);
 
+    // Route pour bloquer plusieurs comptes via job
+    Route::post('/comptes/bloquer-job', [CompteController::class, 'bloquerViaJob']);
+
     // Routes pour les admins (sans auth)
     Route::apiResource('admins', AdminController::class);
     Route::get('/admins/comptes', [AdminController::class, 'getAllComptes']);
