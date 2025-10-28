@@ -20,7 +20,7 @@ class CompteUpdateTest extends TestCase
             'type' => 'cheque'
         ]);
 
-        $response = $this->putJson("/api/v1/comptes/{$compte->id}", [
+        $response = $this->putJson("guisse/v1/comptes/{$compte->id}", [
             'type' => 'epargne'
         ]);
 
@@ -45,7 +45,7 @@ class CompteUpdateTest extends TestCase
             'solde' => 100000
         ]);
 
-        $response = $this->putJson("/api/v1/comptes/{$compte->id}", [
+        $response = $this->putJson("guisse/v1/comptes/{$compte->id}", [
             'solde' => 200000
         ]);
 
@@ -66,7 +66,7 @@ class CompteUpdateTest extends TestCase
             'statut' => 'actif'
         ]);
 
-        $response = $this->putJson("/api/v1/comptes/{$compte->id}", [
+        $response = $this->putJson("guisse/v1/comptes/{$compte->id}", [
             'statut' => 'bloque'
         ]);
 
@@ -87,7 +87,7 @@ class CompteUpdateTest extends TestCase
         ]);
         $compte = Compte::factory()->create(['client_id' => $client->id]);
 
-        $response = $this->putJson("/api/v1/comptes/{$compte->id}", [
+        $response = $this->putJson("guisse/v1/comptes/{$compte->id}", [
             'client' => [
                 'id' => $client->id,
                 'titulaire' => 'New Name',
@@ -107,7 +107,7 @@ class CompteUpdateTest extends TestCase
     /** @test */
     public function it_returns_404_for_nonexistent_compte()
     {
-        $response = $this->putJson('/api/v1/comptes/' . fake()->uuid(), [
+        $response = $this->putJson('guisse/v1/comptes/' . fake()->uuid(), [
             'type' => 'epargne'
         ]);
 
@@ -124,11 +124,11 @@ class CompteUpdateTest extends TestCase
         $client = Client::factory()->create();
         $compte = Compte::factory()->create(['client_id' => $client->id]);
 
-        $response = $this->putJson("/api/v1/comptes/{$compte->id}", [
+        $response = $this->putJson("guisse/v1/comptes/{$compte->id}", [
             'type' => 'invalid_type'
         ]);
 
-        $response->assertStatus(400);
+        $response->assertStatus(422);
     }
 
     /** @test */
@@ -137,7 +137,7 @@ class CompteUpdateTest extends TestCase
         $client = Client::factory()->create();
         $compte = Compte::factory()->create(['client_id' => $client->id]);
 
-        $this->putJson("/api/v1/comptes/{$compte->id}", [
+        $this->putJson("guisse/v1/comptes/{$compte->id}", [
             'type' => 'epargne'
         ]);
 

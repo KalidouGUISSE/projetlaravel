@@ -11,10 +11,13 @@ use App\Traits\ApiResponseTrait;
 use App\Http\Resources\CompteResource;
 use App\Http\Requests\CompteRequest;
 use App\Http\Requests\UpdateCompteRequest;
+use App\Http\Requests\BloquerCompteRequest;
+use App\Http\Requests\DebloquerCompteRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 use OpenApi\Attributes as OA;
 
 class CompteController extends Controller
@@ -565,6 +568,229 @@ class CompteController extends Controller
             return $this->errorResponse('Compte non trouvé', 404);
         } catch (\Exception $e) {
             return $this->errorResponse('Erreur lors de la suppression du compte : ' . $e->getMessage(), 500);
+        }
+    }
+
+    #[OA\Post(
+        path: "/comptes/{id}/bloquer",
+        summary: "Bloquer un compte",
+        description: "Bloque un compte épargne actif avec un motif et une durée spécifiée.",
+        security: [
+            new OA\SecurityScheme(
+                securityScheme: "bearerAuth",
+                type: "http",
+                scheme: "bearer"
+            )
+        ],
+        tags: ["Comptes"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID du compte à bloquer",
+                schema: new OA\Schema(type: "string", format: "uuid")
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["motif", "duree", "unite"],
+                properties: [
+                    new OA\Property(property: "motif", type: "string", example: "Activité suspecte détectée"),
+                    new OA\Property(property: "duree", type: "integer", example: 30),
+                    new OA\Property(property: "unite", type: "string", enum: ["jour", "jours", "semaine", "semaines", "mois", "annee", "annees"], example: "mois")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Compte bloqué avec succès",
+                content: new OA\JsonContent(ref: "#/components/schemas/CompteResponse")
+            ),
+            new OA\Response(
+                response: 400,
+                description: "Données invalides ou compte déjà bloqué",
+                content: new OA\JsonContent(ref: "#/components/schemas/ValidationErrorResponse")
+            ),
+            new OA\Response(
+                response: 404,
+                description: "Compte non trouvé",
+                content: new OA\JsonContent(ref: "#/components/schemas/NotFoundErrorResponse")
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Erreur serveur",
+                content: new OA\JsonContent(ref: "#/components/schemas/ErrorResponse")
+            )
+        ]
+    )]
+    public function bloquer(BloquerCompteRequest $request, string $id)
+    {
+        try {
+            $compte = Compte::findOrFail($id);
+
+            // Vérifier que le compte est actif
+            if ($compte->statut !== 'actif') {
+                return $this->errorResponse('Seul un compte actif peut être bloqué.', 400);
+            }
+
+            // Vérifier que c'est un compte épargne
+            if ($compte->type !== 'epargne') {
+                return $this->errorResponse('Seul un compte épargne peut être bloqué.', 400);
+            }
+
+            $data = $request->validated();
+
+            // Calculer la date de fin de blocage
+            $dateDebut = now();
+            $dateFin = $this->calculerDateFinBlocage($data['duree'], $data['unite']);
+
+            // Bloquer le compte
+            $compte->update([
+                'statut' => 'bloque',
+                'motifBlocage' => $data['motif'],
+                'date_debut_blocage' => $dateDebut,
+                'date_fin_blocage' => $dateFin,
+            ]);
+
+            // Mettre à jour les metadata
+            $metadata = $compte->metadata ?? [];
+            $metadata['derniereModification'] = now();
+            $metadata['version'] = ($metadata['version'] ?? 1) + 1;
+            $compte->metadata = $metadata;
+            $compte->save();
+
+            return $this->successResponse([
+                'id' => $compte->id,
+                'statut' => $compte->statut,
+                'motifBlocage' => $compte->motifBlocage,
+                'dateBlocage' => $compte->date_debut_blocage->toISOString(),
+                'dateDeblocagePrevue' => $compte->date_fin_blocage->toISOString(),
+            ], 'Compte bloqué avec succès', 200);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->errorResponse('Compte non trouvé', 404);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors du blocage du compte : ' . $e->getMessage(), 500);
+        }
+    }
+
+    #[OA\Post(
+        path: "/comptes/{id}/debloquer",
+        summary: "Débloquer un compte",
+        description: "Débloque un compte bloqué avec un motif spécifié.",
+        security: [
+            new OA\SecurityScheme(
+                securityScheme: "bearerAuth",
+                type: "http",
+                scheme: "bearer"
+            )
+        ],
+        tags: ["Comptes"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID du compte à débloquer",
+                schema: new OA\Schema(type: "string", format: "uuid")
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["motif"],
+                properties: [
+                    new OA\Property(property: "motif", type: "string", example: "Vérification complétée")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Compte débloqué avec succès",
+                content: new OA\JsonContent(ref: "#/components/schemas/CompteResponse")
+            ),
+            new OA\Response(
+                response: 400,
+                description: "Données invalides ou compte non bloqué",
+                content: new OA\JsonContent(ref: "#/components/schemas/ValidationErrorResponse")
+            ),
+            new OA\Response(
+                response: 404,
+                description: "Compte non trouvé",
+                content: new OA\JsonContent(ref: "#/components/schemas/NotFoundErrorResponse")
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Erreur serveur",
+                content: new OA\JsonContent(ref: "#/components/schemas/ErrorResponse")
+            )
+        ]
+    )]
+    public function debloquer(DebloquerCompteRequest $request, string $id)
+    {
+        try {
+            $compte = Compte::findOrFail($id);
+
+            // Vérifier que le compte est bloqué
+            if ($compte->statut !== 'bloque') {
+                return $this->errorResponse('Seul un compte bloqué peut être débloqué.', 400);
+            }
+
+            $data = $request->validated();
+
+            // Débloquer le compte
+            $compte->update([
+                'statut' => 'actif',
+                'motifBlocage' => null,
+                'date_debut_blocage' => null,
+                'date_fin_blocage' => null,
+            ]);
+
+            // Mettre à jour les metadata
+            $metadata = $compte->metadata ?? [];
+            $metadata['derniereModification'] = now();
+            $metadata['version'] = ($metadata['version'] ?? 1) + 1;
+            $compte->metadata = $metadata;
+            $compte->save();
+
+            return $this->successResponse([
+                'id' => $compte->id,
+                'statut' => $compte->statut,
+                'dateDeblocage' => now()->toISOString(),
+            ], 'Compte débloqué avec succès', 200);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->errorResponse('Compte non trouvé', 404);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors du déblocage du compte : ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Calculer la date de fin de blocage en fonction de la durée et de l'unité
+     */
+    private function calculerDateFinBlocage(int $duree, string $unite): Carbon
+    {
+        $dateFin = now();
+
+        switch ($unite) {
+            case 'jour':
+            case 'jours':
+                return $dateFin->addDays($duree);
+            case 'semaine':
+            case 'semaines':
+                return $dateFin->addWeeks($duree);
+            case 'mois':
+                return $dateFin->addMonths($duree);
+            case 'annee':
+            case 'annees':
+                return $dateFin->addYears($duree);
+            default:
+                throw new \InvalidArgumentException("Unité de temps invalide: {$unite}");
         }
     }
 }

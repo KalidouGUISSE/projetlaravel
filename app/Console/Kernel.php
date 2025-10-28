@@ -19,6 +19,9 @@ class Kernel extends ConsoleKernel
 
         // Désarchiver les comptes bloqués dont la date de fin de blocage est échue (toutes les heures)
         $schedule->job(new \App\Jobs\UnarchiveBlockedAccounts)->hourly();
+
+        // Débloquer automatiquement les comptes dont la période de blocage est expirée (toutes les heures)
+        $schedule->job(new \App\Jobs\DebloquerComptesExpires)->hourly();
     }
 
     /**

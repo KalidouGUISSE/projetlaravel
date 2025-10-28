@@ -44,6 +44,10 @@ Route::prefix('v1')->group(function () {
     Route::put('/comptes/{id}', [CompteController::class, 'update']);
     Route::delete('/comptes/{id}', [CompteController::class, 'destroy']);
 
+    // Routes pour bloquer/débloquer les comptes
+    Route::post('/comptes/{id}/bloquer', [CompteController::class, 'bloquer']);
+    Route::post('/comptes/{id}/debloquer', [CompteController::class, 'debloquer']);
+
     // Route de test pour comptes sans auth (pour tester)
     Route::get('/comptes-test', [CompteController::class, 'index']);
 

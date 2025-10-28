@@ -24,12 +24,17 @@ class Compte extends Model
         'solde',
         'statut',
         'metadata',
+        'motifBlocage',
+        'date_debut_blocage',
+        'date_fin_blocage',
     ];
 
     protected $casts = [
         'metadata' => 'array',
         'solde' => 'float',
         'deleted_at' => 'datetime',
+        'date_debut_blocage' => 'datetime',
+        'date_fin_blocage' => 'datetime',
     ];
 
     public function client()
