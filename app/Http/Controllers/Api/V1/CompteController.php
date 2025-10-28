@@ -295,7 +295,7 @@ class CompteController extends Controller
      */
     private function getCompteData(Compte $compte): array
     {
-        return [
+        $data = [
             'id' => $compte->id,
             'numeroCompte' => $compte->numeroCompte,
             'titulaire' => $compte->client->titulaire ?? $compte->client->nom . ' ' . $compte->client->prenom,
@@ -306,6 +306,14 @@ class CompteController extends Controller
             'statut' => $compte->statut,
             'metadata' => $compte->metadata,
         ];
+
+        // Ajouter les informations de blocage si elles existent
+        if ($compte->statut === 'bloque' && $compte->motifBlocage) {
+            $data['motifBlocage'] = $compte->motifBlocage;
+            $data['dateDebutBlocage'] = $compte->date_debut_blocage?->toISOString();
+            $data['dateFinBlocage'] = $compte->date_fin_blocage?->toISOString();
+        }
+        return $data;
     }
 
     #[OA\Get(
