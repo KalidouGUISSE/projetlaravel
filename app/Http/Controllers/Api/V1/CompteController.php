@@ -10,6 +10,7 @@ use App\Models\Admin;
 use App\Traits\ApiResponseTrait;
 use App\Http\Resources\CompteResource;
 use App\Http\Requests\CompteRequest;
+use App\Http\Requests\UpdateCompteRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -372,6 +373,126 @@ class CompteController extends Controller
             return $this->errorResponse('Erreur lors de la récupération du compte : ' . $e->getMessage(), 500);
         }
     }
+
+
+    #[OA\Put(
+        path: "/comptes/{id}",
+        summary: "Mettre à jour un compte",
+        description: "Met à jour les informations d'un compte existant. Permet de modifier le type, le solde, le statut et les informations du client associé.",
+        security: [
+            new OA\SecurityScheme(
+                securityScheme: "bearerAuth",
+                type: "http",
+                scheme: "bearer"
+            )
+        ],
+        tags: ["Comptes"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID du compte à mettre à jour",
+                schema: new OA\Schema(type: "string", format: "uuid")
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "type", type: "string", enum: ["cheque", "epargne"], example: "epargne"),
+                    new OA\Property(property: "solde", type: "number", minimum: 0, example: 750000),
+                    new OA\Property(property: "statut", type: "string", enum: ["actif", "bloque", "ferme"], example: "actif"),
+                    new OA\Property(property: "client", type: "object", properties: [
+                        new OA\Property(property: "id", type: "string", format: "uuid", example: "72f09e5b-e8f0-42e7-87c9-b2a8cb281adb"),
+                        new OA\Property(property: "titulaire", type: "string", example: "Hawa BB Wane"),
+                        new OA\Property(property: "nci", type: "string", example: "1234567890123"),
+                        new OA\Property(property: "email", type: "string", format: "email", example: "hawa.wane@example.com"),
+                        new OA\Property(property: "telephone", type: "string", example: "+221771234567"),
+                        new OA\Property(property: "adresse", type: "string", example: "Dakar, Sénégal")
+                    ])
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Compte mis à jour avec succès",
+                content: new OA\JsonContent(ref: "#/components/schemas/CompteResponse")
+            ),
+            new OA\Response(
+                response: 400,
+                description: "Données invalides",
+                content: new OA\JsonContent(ref: "#/components/schemas/ValidationErrorResponse")
+            ),
+            new OA\Response(
+                response: 404,
+                description: "Compte non trouvé",
+                content: new OA\JsonContent(ref: "#/components/schemas/NotFoundErrorResponse")
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Erreur serveur",
+                content: new OA\JsonContent(ref: "#/components/schemas/ErrorResponse")
+            )
+        ]
+    )]
+    public function update(UpdateCompteRequest $request, string $id)
+    {
+        try {
+            $compte = Compte::with('client')->findOrFail($id);
+            $data = $request->validated();
+
+            // Mettre à jour les informations du compte
+            $updateData = [];
+            if (isset($data['type'])) {
+                $updateData['type'] = $data['type'];
+            }
+            if (isset($data['solde'])) {
+                $updateData['solde'] = $data['solde'];
+            }
+            if (isset($data['statut'])) {
+                $updateData['statut'] = $data['statut'];
+            }
+
+            if (!empty($updateData)) {
+                $compte->update($updateData);
+
+                // Mettre à jour les metadata
+                $metadata = $compte->metadata ?? [];
+                $metadata['derniereModification'] = now();
+                $metadata['version'] = ($metadata['version'] ?? 1) + 1;
+                $compte->metadata = $metadata;
+                $compte->save();
+            }
+
+            // Mettre à jour les informations du client si fourni
+            if (isset($data['client']) && !empty($data['client'])) {
+                $clientData = array_filter($data['client'], function($value) {
+                    return $value !== null && $value !== '';
+                });
+
+                if (!empty($clientData)) {
+                    $compte->client->update($clientData);
+                }
+            }
+
+            // Recharger le compte avec les relations mises à jour
+            $compte->load('client');
+
+            return $this->successResponse(
+                $this->getCompteData($compte),
+                'Compte mis à jour avec succès',
+                200
+            );
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->errorResponse('Compte non trouvé', 404);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la mise à jour du compte : ' . $e->getMessage(), 500);
+        }
+    }
+
 
     #[OA\Delete(
         path: "/comptes/{id}",
