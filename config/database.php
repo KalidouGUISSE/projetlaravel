@@ -35,13 +35,27 @@ return [
 
     'connections' => [
 
-        'sqlite' => [
-            'driver' => 'sqlite',
-            'url' => env('DATABASE_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
-            'prefix' => '',
-            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-        ],
+       'archive' => [
+           'driver' => 'pgsql',
+           'host' => env('DB_ARCHIVE_HOST'),
+           'port' => env('DB_ARCHIVE_PORT', '5432'),
+           'database' => env('DB_ARCHIVE_DATABASE'),
+           'username' => env('DB_ARCHIVE_USERNAME'),
+           'password' => env('DB_ARCHIVE_PASSWORD'),
+           'charset' => 'utf8',
+           'prefix' => '',
+           'prefix_indexes' => true,
+           'search_path' => 'public',
+           'sslmode' => env('DB_ARCHIVE_SSLMODE', 'prefer'),
+       ],
+
+       'sqlite' => [
+           'driver' => 'sqlite',
+           'url' => env('DATABASE_URL'),
+           'database' => env('DB_DATABASE', database_path('database.sqlite')),
+           'prefix' => '',
+           'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+       ],
 
         'mysql' => [
             'driver' => 'mysql',
