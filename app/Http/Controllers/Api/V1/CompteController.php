@@ -288,6 +288,12 @@ class CompteController extends Controller
                 201
             );
 
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            // Vérifier si c'est une violation de contrainte d'unicité sur le NCI
+            if (str_contains($e->getMessage(), 'clients_nci_unique')) {
+                return $this->errorResponse('Le numéro de carte d\'identité nationale (NCI) doit être unique. Ce NCI est déjà utilisé par un autre client.', 400);
+            }
+            return $this->errorResponse('Erreur lors de la création du compte : ' . $e->getMessage(), 500);
         } catch (\Exception $e) {
             return $this->errorResponse('Erreur lors de la création du compte : ' . $e->getMessage(), 500);
         }
@@ -639,7 +645,6 @@ class CompteController extends Controller
                     new OA\Property(property: "duree", type: "integer", example: 30, description: "Durée du blocage (requis si pas de dates spécifiques)"),
                     new OA\Property(property: "unite", type: "string", enum: ["jour", "jours", "semaine", "semaines", "mois", "annee", "annees"], example: "mois", description: "Unité de temps (requis si pas de dates spécifiques)"),
                     new OA\Property(property: "date_debut", type: "string", format: "date-time", example: "2025-10-29T10:00:00Z", description: "Date de début du blocage (optionnel)"),
-                    new OA\Property(property: "date_fin", type: "string", format: "date-time", example: "2025-11-28T10:00:00Z", description: "Date de fin du blocage (optionnel)")
                 ]
             )
         ),
