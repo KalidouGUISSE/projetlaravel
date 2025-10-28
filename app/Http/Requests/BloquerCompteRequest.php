@@ -23,8 +23,10 @@ class BloquerCompteRequest extends FormRequest
     {
         return [
             'motif' => 'required|string|max:255',
-            'duree' => 'required|integer|min:1',
-            'unite' => 'required|string|in:jour,jours,semaine,semaines,mois,annee,annees',
+            'duree' => 'required_without:date_debut|integer|min:1',
+            'unite' => 'required_without:date_debut|string|in:jour,jours,semaine,semaines,mois,annee,annees',
+            'date_debut' => 'nullable|date|after:now',
+            'date_fin' => 'nullable|date|after:date_debut',
         ];
     }
 
@@ -34,11 +36,15 @@ class BloquerCompteRequest extends FormRequest
             'motif.required' => 'Le motif de blocage est obligatoire.',
             'motif.string' => 'Le motif doit être une chaîne de caractères.',
             'motif.max' => 'Le motif ne peut pas dépasser 255 caractères.',
-            'duree.required' => 'La durée de blocage est obligatoire.',
+            'duree.required_without' => 'La durée est obligatoire si aucune date de début n\'est spécifiée.',
             'duree.integer' => 'La durée doit être un nombre entier.',
             'duree.min' => 'La durée doit être d\'au moins 1.',
-            'unite.required' => 'L\'unité de temps est obligatoire.',
+            'unite.required_without' => 'L\'unité est obligatoire si aucune date de début n\'est spécifiée.',
             'unite.in' => 'L\'unité doit être l\'une des suivantes : jour, jours, semaine, semaines, mois, annee, annees.',
+            'date_debut.date' => 'La date de début doit être une date valide.',
+            'date_debut.after' => 'La date de début doit être dans le futur.',
+            'date_fin.date' => 'La date de fin doit être une date valide.',
+            'date_fin.after' => 'La date de fin doit être après la date de début.',
         ];
     }
 }

@@ -45,6 +45,42 @@ class CompteBlocageTest extends TestCase
     }
 
     /** @test */
+    public function it_can_block_an_account_with_specific_dates()
+    {
+        $client = Client::factory()->create();
+        $compte = Compte::factory()->create([
+            'client_id' => $client->id,
+            'type' => 'epargne',
+            'statut' => 'actif'
+        ]);
+
+        $dateDebut = now()->addDays(2)->toDateTimeString();
+        $dateFin = now()->addDays(32)->toDateTimeString();
+
+        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/bloquer", [
+            'motif' => 'Maintenance programmée',
+            'date_debut' => $dateDebut,
+            'date_fin' => $dateFin
+        ]);
+
+        $response->assertStatus(200)
+                 ->assertJson([
+                     'success' => true,
+                     'message' => 'Compte bloqué avec succès'
+                 ]);
+
+        $this->assertDatabaseHas('comptes', [
+            'id' => $compte->id,
+            'statut' => 'bloque',
+            'motifBlocage' => 'Maintenance programmée'
+        ]);
+
+        $compte->refresh();
+        $this->assertEquals($dateDebut, $compte->date_debut_blocage->toISOString());
+        $this->assertEquals($dateFin, $compte->date_fin_blocage->toISOString());
+    }
+
+    /** @test */
     public function it_cannot_block_a_non_epargne_account()
     {
         $client = Client::factory()->create();
@@ -157,6 +193,35 @@ class CompteBlocageTest extends TestCase
             'motif' => '',
             'duree' => 0,
             'unite' => 'invalid'
+        ]);
+
+        $response->assertStatus(422);
+    }
+
+    /** @test */
+    public function it_validates_specific_dates_block_request()
+    {
+        $client = Client::factory()->create();
+        $compte = Compte::factory()->create([
+            'client_id' => $client->id,
+            'type' => 'epargne',
+            'statut' => 'actif'
+        ]);
+
+        // Test avec date de début dans le passé
+        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/bloquer", [
+            'motif' => 'Test',
+            'date_debut' => now()->subDays(1)->toDateTimeString(),
+            'date_fin' => now()->addDays(10)->toDateTimeString()
+        ]);
+
+        $response->assertStatus(422);
+
+        // Test avec date de fin avant date de début
+        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/bloquer", [
+            'motif' => 'Test',
+            'date_debut' => now()->addDays(10)->toDateTimeString(),
+            'date_fin' => now()->addDays(5)->toDateTimeString()
         ]);
 
         $response->assertStatus(422);

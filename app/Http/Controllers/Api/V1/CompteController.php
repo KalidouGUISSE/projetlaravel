@@ -605,11 +605,13 @@ class CompteController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ["motif", "duree", "unite"],
+                required: ["motif"],
                 properties: [
                     new OA\Property(property: "motif", type: "string", example: "Activité suspecte détectée"),
-                    new OA\Property(property: "duree", type: "integer", example: 30),
-                    new OA\Property(property: "unite", type: "string", enum: ["jour", "jours", "semaine", "semaines", "mois", "annee", "annees"], example: "mois")
+                    new OA\Property(property: "duree", type: "integer", example: 30, description: "Durée du blocage (requis si pas de dates spécifiques)"),
+                    new OA\Property(property: "unite", type: "string", enum: ["jour", "jours", "semaine", "semaines", "mois", "annee", "annees"], example: "mois", description: "Unité de temps (requis si pas de dates spécifiques)"),
+                    new OA\Property(property: "date_debut", type: "string", format: "date-time", example: "2025-10-29T10:00:00Z", description: "Date de début du blocage (optionnel)"),
+                    new OA\Property(property: "date_fin", type: "string", format: "date-time", example: "2025-11-28T10:00:00Z", description: "Date de fin du blocage (optionnel)")
                 ]
             )
         ),
@@ -653,9 +655,16 @@ class CompteController extends Controller
 
             $data = $request->validated();
 
-            // Calculer la date de fin de blocage
-            $dateDebut = now();
-            $dateFin = $this->calculerDateFinBlocage($data['duree'], $data['unite']);
+            // Calculer les dates de blocage
+            if (isset($data['date_debut']) && isset($data['date_fin'])) {
+                // Blocage avec dates spécifiques
+                $dateDebut = Carbon::parse($data['date_debut']);
+                $dateFin = Carbon::parse($data['date_fin']);
+            } else {
+                // Blocage avec durée relative
+                $dateDebut = now();
+                $dateFin = $this->calculerDateFinBlocage($data['duree'], $data['unite']);
+            }
 
             // Bloquer le compte
             $compte->update([

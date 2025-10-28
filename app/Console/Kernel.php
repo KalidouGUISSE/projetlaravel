@@ -22,6 +22,12 @@ class Kernel extends ConsoleKernel
 
         // Débloquer automatiquement les comptes dont la période de blocage est expirée (toutes les heures)
         $schedule->job(new \App\Jobs\DebloquerComptesExpires)->hourly();
+
+        // Bloquer automatiquement les comptes programmés à minuit
+        $schedule->job(new \App\Jobs\BloquerComptesProgrammes)->dailyAt('00:00');
+
+        // Débloquer automatiquement les comptes dont la période de blocage est expirée à minuit
+        $schedule->job(new \App\Jobs\DebloquerComptesExpires)->dailyAt('00:00');
     }
 
     /**
