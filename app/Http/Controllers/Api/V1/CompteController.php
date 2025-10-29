@@ -544,7 +544,7 @@ class CompteController extends Controller
     #[OA\Delete(
         path: "/comptes/{id}",
         summary: "Supprimer un compte (soft delete)",
-        description: "Effectue une suppression douce du compte en changeant le statut à 'ferme' et en définissant la date de fermeture.",
+        description: "Effectue une suppression douce du compte en changeant le statut à 'ferme' et en définissant la date de fermeture. Seul un compte actif peut être supprimé.",
         security: [
             new OA\SecurityScheme(
                 securityScheme: "bearerAuth",
@@ -581,6 +581,11 @@ class CompteController extends Controller
                 )
             ),
             new OA\Response(
+                response: 400,
+                description: "Données invalides ou compte non actif",
+                content: new OA\JsonContent(ref: "#/components/schemas/ValidationErrorResponse")
+            ),
+            new OA\Response(
                 response: 404,
                 description: "Compte non trouvé",
                 content: new OA\JsonContent(ref: "#/components/schemas/NotFoundErrorResponse")
@@ -596,6 +601,15 @@ class CompteController extends Controller
     {
         try {
             $compte = Compte::findOrFail($id);
+
+            // Vérifier que le compte est actif
+            if ($compte->statut !== 'actif') {
+                // Si le compte est bloqué, inclure les dates de blocage dans la réponse d'erreur
+                if ($compte->statut === 'bloque') {
+                    return $this->errorResponse('Un compte bloqué ne peut pas être supprimé. Date de début de blocage: ' . $compte->date_debut_blocage?->toISOString() . ', Date de fin de blocage: ' . $compte->date_fin_blocage?->toISOString(), 400);
+                }
+                return $this->errorResponse('Seul un compte actif peut être supprimé.', 400);
+            }
 
             // Effectuer le soft delete
             $compte->delete();

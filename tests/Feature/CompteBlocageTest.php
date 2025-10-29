@@ -12,260 +12,54 @@ class CompteBlocageTest extends TestCase
     use RefreshDatabase;
 
     /** @test */
-    public function it_can_block_an_active_epargne_account()
+    public function it_can_delete_an_active_account()
     {
         $client = Client::factory()->create();
         $compte = Compte::factory()->create([
             'client_id' => $client->id,
-            'type' => 'epargne',
             'statut' => 'actif'
         ]);
 
-        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/bloquer", [
-            'motif' => 'Activité suspecte détectée',
-            'duree' => 30,
-            'unite' => 'mois'
-        ]);
+        $response = $this->deleteJson("guisse/v1/comptes/{$compte->id}");
 
         $response->assertStatus(200)
                  ->assertJson([
                      'success' => true,
-                     'message' => 'Compte bloqué avec succès'
+                     'message' => 'Compte supprimé avec succès'
                  ]);
 
         $this->assertDatabaseHas('comptes', [
             'id' => $compte->id,
-            'statut' => 'bloque',
-            'motifBlocage' => 'Activité suspecte détectée'
+            'statut' => 'ferme'
         ]);
 
-        $compte->refresh();
-        $this->assertNotNull($compte->date_debut_blocage);
-        $this->assertNotNull($compte->date_fin_blocage);
+        $this->assertSoftDeleted('comptes', [
+            'id' => $compte->id
+        ]);
     }
 
     /** @test */
-    public function it_can_block_an_account_with_specific_dates()
+    public function it_cannot_delete_a_non_active_account()
     {
         $client = Client::factory()->create();
         $compte = Compte::factory()->create([
             'client_id' => $client->id,
-            'type' => 'epargne',
-            'statut' => 'actif'
-        ]);
-
-        $dateDebut = now()->addDays(2)->toDateTimeString();
-        $dateFin = now()->addDays(32)->toDateTimeString();
-
-        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/bloquer", [
-            'motif' => 'Maintenance programmée',
-            'date_debut' => $dateDebut,
-            'date_fin' => $dateFin
-        ]);
-
-        $response->assertStatus(200)
-                 ->assertJson([
-                     'success' => true,
-                     'message' => 'Compte bloqué avec succès'
-                 ]);
-
-        $this->assertDatabaseHas('comptes', [
-            'id' => $compte->id,
-            'statut' => 'bloque',
-            'motifBlocage' => 'Maintenance programmée'
-        ]);
-
-        $compte->refresh();
-        $this->assertEquals($dateDebut, $compte->date_debut_blocage->toISOString());
-        $this->assertEquals($dateFin, $compte->date_fin_blocage->toISOString());
-    }
-
-    /** @test */
-    public function it_cannot_block_a_non_epargne_account()
-    {
-        $client = Client::factory()->create();
-        $compte = Compte::factory()->create([
-            'client_id' => $client->id,
-            'type' => 'cheque',
-            'statut' => 'actif'
-        ]);
-
-        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/bloquer", [
-            'motif' => 'Activité suspecte détectée',
-            'duree' => 30,
-            'unite' => 'mois'
-        ]);
-
-        $response->assertStatus(400)
-                 ->assertJson([
-                     'success' => false,
-                     'message' => 'Seul un compte épargne peut être bloqué.'
-                 ]);
-    }
-
-    /** @test */
-    public function it_cannot_block_an_already_blocked_account()
-    {
-        $client = Client::factory()->create();
-        $compte = Compte::factory()->create([
-            'client_id' => $client->id,
-            'type' => 'epargne',
             'statut' => 'bloque'
         ]);
 
-        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/bloquer", [
-            'motif' => 'Activité suspecte détectée',
-            'duree' => 30,
-            'unite' => 'mois'
-        ]);
+        $response = $this->deleteJson("guisse/v1/comptes/{$compte->id}");
 
         $response->assertStatus(400)
                  ->assertJson([
                      'success' => false,
-                     'message' => 'Seul un compte actif peut être bloqué.'
+                     'message' => 'Seul un compte actif peut être supprimé.'
                  ]);
     }
 
     /** @test */
-    public function it_can_unblock_a_blocked_account()
+    public function it_returns_404_for_nonexistent_account_on_delete()
     {
-        $client = Client::factory()->create();
-        $compte = Compte::factory()->create([
-            'client_id' => $client->id,
-            'type' => 'epargne',
-            'statut' => 'bloque',
-            'motifBlocage' => 'Activité suspecte',
-            'date_debut_blocage' => now(),
-            'date_fin_blocage' => now()->addDays(30)
-        ]);
-
-        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/debloquer", [
-            'motif' => 'Vérification complétée'
-        ]);
-
-        $response->assertStatus(200)
-                 ->assertJson([
-                     'success' => true,
-                     'message' => 'Compte débloqué avec succès'
-                 ]);
-
-        $this->assertDatabaseHas('comptes', [
-            'id' => $compte->id,
-            'statut' => 'actif',
-            'motifBlocage' => null,
-            'date_debut_blocage' => null,
-            'date_fin_blocage' => null
-        ]);
-    }
-
-    /** @test */
-    public function it_cannot_unblock_an_active_account()
-    {
-        $client = Client::factory()->create();
-        $compte = Compte::factory()->create([
-            'client_id' => $client->id,
-            'type' => 'epargne',
-            'statut' => 'actif'
-        ]);
-
-        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/debloquer", [
-            'motif' => 'Vérification complétée'
-        ]);
-
-        $response->assertStatus(400)
-                 ->assertJson([
-                     'success' => false,
-                     'message' => 'Seul un compte bloqué peut être débloqué.'
-                 ]);
-    }
-
-    /** @test */
-    public function it_validates_block_request_data()
-    {
-        $client = Client::factory()->create();
-        $compte = Compte::factory()->create([
-            'client_id' => $client->id,
-            'type' => 'epargne',
-            'statut' => 'actif'
-        ]);
-
-        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/bloquer", [
-            'motif' => '',
-            'duree' => 0,
-            'unite' => 'invalid'
-        ]);
-
-        $response->assertStatus(422);
-    }
-
-    /** @test */
-    public function it_validates_specific_dates_block_request()
-    {
-        $client = Client::factory()->create();
-        $compte = Compte::factory()->create([
-            'client_id' => $client->id,
-            'type' => 'epargne',
-            'statut' => 'actif'
-        ]);
-
-        // Test avec date de début dans le passé
-        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/bloquer", [
-            'motif' => 'Test',
-            'date_debut' => now()->subDays(1)->toDateTimeString(),
-            'date_fin' => now()->addDays(10)->toDateTimeString()
-        ]);
-
-        $response->assertStatus(422);
-
-        // Test avec date de fin avant date de début
-        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/bloquer", [
-            'motif' => 'Test',
-            'date_debut' => now()->addDays(10)->toDateTimeString(),
-            'date_fin' => now()->addDays(5)->toDateTimeString()
-        ]);
-
-        $response->assertStatus(422);
-    }
-
-    /** @test */
-    public function it_validates_unblock_request_data()
-    {
-        $client = Client::factory()->create();
-        $compte = Compte::factory()->create([
-            'client_id' => $client->id,
-            'type' => 'epargne',
-            'statut' => 'bloque'
-        ]);
-
-        $response = $this->postJson("guisse/v1/comptes/{$compte->id}/debloquer", [
-            'motif' => ''
-        ]);
-
-        $response->assertStatus(422);
-    }
-
-    /** @test */
-    public function it_returns_404_for_nonexistent_account_on_block()
-    {
-        $response = $this->postJson('guisse/v1/comptes/' . fake()->uuid() . '/bloquer', [
-            'motif' => 'Activité suspecte détectée',
-            'duree' => 30,
-            'unite' => 'mois'
-        ]);
-
-        $response->assertStatus(404)
-                 ->assertJson([
-                     'success' => false,
-                     'message' => 'Compte non trouvé'
-                 ]);
-    }
-
-    /** @test */
-    public function it_returns_404_for_nonexistent_account_on_unblock()
-    {
-        $response = $this->postJson('guisse/v1/comptes/' . fake()->uuid() . '/debloquer', [
-            'motif' => 'Vérification complétée'
-        ]);
+        $response = $this->deleteJson('guisse/v1/comptes/' . fake()->uuid());
 
         $response->assertStatus(404)
                  ->assertJson([
