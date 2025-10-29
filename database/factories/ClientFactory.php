@@ -31,7 +31,7 @@ class ClientFactory extends Factory
             'nom' => $this->faker->lastName(),
             'prenom' => $this->faker->firstName(),
             'email' => $this->faker->unique()->safeEmail(),
-            'telephone' => $this->faker->phoneNumber(),
+            'telephone' => '+221' . $this->faker->numberBetween(700000000, 799999999),
             // 'adresse' => $this->faker->address(),
         ];
     }

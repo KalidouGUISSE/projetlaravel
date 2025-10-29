@@ -34,6 +34,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/clients', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store']);
     Route::get('/clients/{id}', [ClientController::class, 'show']);
+    Route::get('/clients/telephone/{telephone}', [ClientController::class, 'getByTelephone']);
     Route::put('/clients/{id}', [ClientController::class, 'update'])->middleware(\App\Http\Middleware\LoggingMiddleware::class);
     Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
 

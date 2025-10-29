@@ -395,4 +395,88 @@ class ClientController extends Controller
             'message' => 'Client supprimé avec succès !',
         ], 200);
     }
+
+    #[OA\Get(
+        path: "/clients/telephone/{telephone}",
+        summary: "Récupérer un client par numéro de téléphone",
+        description: "Retourne les détails d'un client en utilisant son numéro de téléphone.",
+        tags: ["Clients"],
+        parameters: [
+            new OA\Parameter(
+                name: "telephone",
+                in: "path",
+                required: true,
+                description: "Numéro de téléphone du client",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Détails du client",
+                content: new OA\JsonContent(ref: "#/components/schemas/Client")
+            ),
+            new OA\Response(
+                response: 404,
+                description: "Client non trouvé",
+                content: new OA\JsonContent(ref: "#/components/schemas/NotFoundErrorResponse")
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Erreur serveur",
+                content: new OA\JsonContent(ref: "#/components/schemas/ErrorResponse")
+            )
+        ]
+    )]
+    /**
+     * Récupérer un client par numéro de téléphone.
+     */
+    public function getByTelephone(string $telephone)
+    {
+        // Normaliser le numéro de téléphone pour la recherche
+        $normalizedTelephone = $this->normalizeTelephone($telephone);
+
+        $client = Client::where('telephone', $normalizedTelephone)->first();
+
+        if (!$client) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun client trouvé avec ce numéro de téléphone.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => new ClientResource($client),
+        ], 200);
+    }
+
+    /**
+     * Normaliser un numéro de téléphone sénégalais.
+     * Accepte +221XXXXXXXXX ou XXXXXXXXX (9 chiffres).
+     * Retourne toujours +221XXXXXXXXX.
+     */
+    private function normalizeTelephone(string $telephone): string
+    {
+        // Supprimer tous les espaces et caractères non numériques sauf +
+        $cleaned = preg_replace('/[^\d+]/', '', $telephone);
+
+        // Si commence par +221, c'est déjà normalisé
+        if (str_starts_with($cleaned, '+221')) {
+            return $cleaned;
+        }
+
+        // Si commence par 221, ajouter +
+        if (str_starts_with($cleaned, '221')) {
+            return '+' . $cleaned;
+        }
+
+        // Si c'est 9 chiffres, ajouter +221
+        if (preg_match('/^\d{9}$/', $cleaned)) {
+            return '+221' . $cleaned;
+        }
+
+        // Retourner tel quel si ne correspond pas aux patterns attendus
+        return $telephone;
+    }
 }
