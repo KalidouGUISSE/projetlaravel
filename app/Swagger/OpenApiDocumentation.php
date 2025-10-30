@@ -256,7 +256,7 @@ use OpenApi\Attributes as OA;
     ]
 )]
 #[OA\Post(
-    path: "/auth/login",
+    path: "/v1/auth/login",
     operationId: "loginUser",
     summary: "Connexion utilisateur",
     description: "Authentifie un utilisateur et retourne un token d'accès avec les permissions",
@@ -311,7 +311,7 @@ use OpenApi\Attributes as OA;
     ]
 )]
 #[OA\Post(
-    path: "/auth/refresh",
+    path: "/v1/auth/refresh",
     operationId: "refreshToken",
     summary: "Rafraîchir le token d'accès",
     description: "Utilise le refresh token pour obtenir un nouveau token d'accès",
@@ -357,7 +357,7 @@ use OpenApi\Attributes as OA;
     ]
 )]
 #[OA\Post(
-    path: "/auth/logout",
+    path: "/v1/auth/logout",
     operationId: "logoutUser",
     summary: "Déconnexion utilisateur",
     description: "Invalide les tokens de l'utilisateur connecté",
