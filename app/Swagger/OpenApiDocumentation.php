@@ -14,7 +14,7 @@ use OpenApi\Attributes as OA;
     description: "Serveur de développement"
 )]
 #[OA\Server(
-    url: "https://projetlaravel-3.onrender.com/api",
+    url: "https://kalidou-guisse-projetlaravel.onrender.com",
     description: "Serveur de production"
 )]
 #[OA\Schema(
