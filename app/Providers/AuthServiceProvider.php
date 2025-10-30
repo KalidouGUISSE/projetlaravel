@@ -22,10 +22,27 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        $this->registerPolicies();
+
+        // Configuration Passport
+        Passport::tokensExpireIn(now()->addHours(1)); // Tokens expirent en 1 heure
+        Passport::refreshTokensExpireIn(now()->addDays(7)); // Refresh tokens expirent en 7 jours
+
+        // Définir les scopes disponibles
+        Passport::tokensCan([
+            'read' => 'Lire les données',
+            'write' => 'Écrire les données',
+            'delete' => 'Supprimer les données',
+            'manage-users' => 'Gérer les utilisateurs',
+            'read-own' => 'Lire ses propres données',
+            'write-own' => 'Écrire ses propres données',
+            'refresh' => 'Rafraîchir les tokens',
+        ]);
+
+        // Utiliser des claims personnalisés pour inclure le rôle
+        Passport::setDefaultScope(['read-own']);
     }
 }
 
 
-Passport::tokensExpireIn(now()->addDays(15));
-Passport::refreshTokensExpireIn(now()->addDays(30));
+// Configuration Passport déplacée dans la méthode boot()

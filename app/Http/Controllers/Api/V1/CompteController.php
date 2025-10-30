@@ -28,6 +28,7 @@ class CompteController extends Controller
     use ApiResponseTrait;
     #[OA\Get(
         path: "/comptes",
+        operationId: "getComptesList",
         summary: "Lister les comptes avec pagination et filtres",
         description: "Retourne la liste des comptes avec support pour la pagination, le tri et les filtres.",
         tags: ["Comptes"],
@@ -170,15 +171,10 @@ class CompteController extends Controller
 
     #[OA\Post(
         path: "/comptes",
+        operationId: "createCompte",
         summary: "Créer un nouveau compte",
         description: "Crée un nouveau compte pour un client, en créant le client si nécessaire. Requiert une authentification.",
-        security: [
-            new OA\SecurityScheme(
-                securityScheme: "bearerAuth",
-                type: "http",
-                scheme: "bearer"
-            )
-        ],
+        security: [["bearerAuth" => []]],
         tags: ["Comptes"],
         requestBody: new OA\RequestBody(
             required: true,
@@ -327,15 +323,10 @@ class CompteController extends Controller
 
     #[OA\Get(
         path: "/comptes/{id}",
+        operationId: "getCompteById",
         summary: "Récupérer un compte spécifique",
         description: "Admin peut récupérer n'importe quel compte. Client peut récupérer seulement ses propres comptes.",
-        security: [
-            new OA\SecurityScheme(
-                securityScheme: "bearerAuth",
-                type: "http",
-                scheme: "bearer"
-            )
-        ],
+        security: [["bearerAuth" => []]],
         tags: ["Comptes"],
         parameters: [
             new OA\Parameter(
@@ -424,15 +415,10 @@ class CompteController extends Controller
 
     #[OA\Put(
         path: "/comptes/{id}",
+        operationId: "updateCompte",
         summary: "Mettre à jour un compte",
         description: "Met à jour les informations d'un compte existant. Permet de modifier le type, le solde, le statut et les informations du client associé.",
-        security: [
-            new OA\SecurityScheme(
-                securityScheme: "bearerAuth",
-                type: "http",
-                scheme: "bearer"
-            )
-        ],
+        security: [["bearerAuth" => []]],
         tags: ["Comptes"],
         parameters: [
             new OA\Parameter(
@@ -543,6 +529,7 @@ class CompteController extends Controller
 
     #[OA\Delete(
         path: "/comptes/{id}",
+        operationId: "deleteCompte",
         summary: "Supprimer un compte (soft delete)",
         description: "Effectue une suppression douce du compte en changeant le statut à 'ferme' et en définissant la date de fermeture. Seul un compte actif peut être supprimé.",
         security: [
@@ -631,15 +618,10 @@ class CompteController extends Controller
 
     #[OA\Post(
         path: "/comptes/{id}/bloquer",
+        operationId: "bloquerCompte",
         summary: "Bloquer un compte",
         description: "Bloque un compte épargne actif avec un motif et une durée spécifiée.",
-        security: [
-            new OA\SecurityScheme(
-                securityScheme: "bearerAuth",
-                type: "http",
-                scheme: "bearer"
-            )
-        ],
+        security: [["bearerAuth" => []]],
         tags: ["Comptes"],
         parameters: [
             new OA\Parameter(
@@ -748,15 +730,10 @@ class CompteController extends Controller
 
     #[OA\Post(
         path: "/comptes/{id}/debloquer",
+        operationId: "debloquerCompte",
         summary: "Débloquer un compte",
         description: "Débloque un compte bloqué avec un motif spécifié.",
-        security: [
-            new OA\SecurityScheme(
-                securityScheme: "bearerAuth",
-                type: "http",
-                scheme: "bearer"
-            )
-        ],
+        security: [["bearerAuth" => []]],
         tags: ["Comptes"],
         parameters: [
             new OA\Parameter(
@@ -844,15 +821,10 @@ class CompteController extends Controller
 
     #[OA\Post(
         path: "/comptes/bloquer-job",
+        operationId: "bloquerComptesJob",
         summary: "Bloquer plusieurs comptes via un Job",
         description: "Lance un job pour bloquer plusieurs comptes épargne actifs avec un motif et une durée spécifiée.",
-        security: [
-            new OA\SecurityScheme(
-                securityScheme: "bearerAuth",
-                type: "http",
-                scheme: "bearer"
-            )
-        ],
+        security: [["bearerAuth" => []]],
         tags: ["Comptes"],
         requestBody: new OA\RequestBody(
             required: true,

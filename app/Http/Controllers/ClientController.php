@@ -14,10 +14,11 @@ use OpenApi\Attributes as OA;
 class ClientController extends Controller
 {
     #[OA\Get(
-         path: "/clients",
-         summary: "Lister tous les clients avec pagination",
-         description: "Retourne la liste paginée des clients avec support pour la pagination, le tri et les filtres.",
-         tags: ["Clients"],
+          path: "/clients",
+          operationId: "getClientsList",
+          summary: "Lister tous les clients avec pagination",
+          description: "Retourne la liste paginée des clients avec support pour la pagination, le tri et les filtres.",
+          tags: ["Clients"],
          parameters: [
              new OA\Parameter(
                  name: "page",
@@ -121,6 +122,7 @@ class ClientController extends Controller
 
     #[OA\Post(
         path: "/clients",
+        operationId: "createClient",
         summary: "Créer un nouveau client",
         description: "Crée un nouveau client avec les informations fournies.",
         tags: ["Clients"],
@@ -168,6 +170,7 @@ class ClientController extends Controller
 
     #[OA\Get(
         path: "/clients/{id}",
+        operationId: "getClientById",
         summary: "Afficher un client spécifique",
         description: "Retourne les détails d'un client par son ID.",
         tags: ["Clients"],
@@ -209,15 +212,10 @@ class ClientController extends Controller
 
     #[OA\Put(
         path: "/clients/{id}",
+        operationId: "updateClient",
         summary: "Mettre à jour un client",
         description: "Met à jour les informations d'un client existant. Tous les champs sont optionnels, mais au moins un doit être modifié.",
-        security: [
-            new OA\SecurityScheme(
-                securityScheme: "bearerAuth",
-                type: "http",
-                scheme: "bearer"
-            )
-        ],
+        security: [["bearerAuth" => []]],
         tags: ["Clients"],
         parameters: [
             new OA\Parameter(
@@ -349,6 +347,7 @@ class ClientController extends Controller
 
     #[OA\Delete(
         path: "/clients/{id}",
+        operationId: "deleteClient",
         summary: "Supprimer un client",
         description: "Supprime un client par son ID.",
         tags: ["Clients"],
@@ -398,6 +397,7 @@ class ClientController extends Controller
 
     #[OA\Get(
         path: "/clients/telephone/{telephone}",
+        operationId: "getClientByTelephone",
         summary: "Récupérer un client par numéro de téléphone",
         description: "Retourne les détails d'un client en utilisant son numéro de téléphone.",
         tags: ["Clients"],

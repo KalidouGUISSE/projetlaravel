@@ -19,6 +19,7 @@ class AdminController extends Controller
 
     #[OA\Get(
         path: "/admins",
+        operationId: "getAdminsList",
         summary: "Lister tous les admins",
         description: "Retourne la liste de tous les admins avec support pour la pagination, le tri et les filtres.",
         tags: ["Admins"],
@@ -125,6 +126,7 @@ class AdminController extends Controller
 
     #[OA\Get(
         path: "/admins/comptes",
+        operationId: "getAllComptesForAdmin",
         summary: "Lister tous les comptes avec pagination et filtres (Admin)",
         description: "Retourne la liste paginée de tous les comptes avec support pour la pagination, le tri et les filtres.",
         tags: ["Admins"],
@@ -222,6 +224,7 @@ class AdminController extends Controller
 
     #[OA\Get(
         path: "/admins/{id}",
+        operationId: "getAdminById",
         summary: "Afficher un admin spécifique",
         description: "Retourne les détails d'un admin par son ID.",
         tags: ["Admins"],
@@ -275,6 +278,7 @@ class AdminController extends Controller
 
     #[OA\Put(
         path: "/admins/{id}",
+        operationId: "updateAdmin",
         summary: "Mettre à jour un admin",
         description: "Met à jour les informations d'un admin existant.",
         tags: ["Admins"],
@@ -349,6 +353,7 @@ class AdminController extends Controller
 
     #[OA\Delete(
         path: "/admins/{id}",
+        operationId: "deleteAdmin",
         summary: "Supprimer un admin",
         description: "Supprime un admin par son ID.",
         tags: ["Admins"],
@@ -411,6 +416,7 @@ class AdminController extends Controller
 
     #[OA\Post(
         path: "/admins",
+        operationId: "createAdmin",
         summary: "Créer un nouvel admin",
         description: "Crée un nouvel admin avec les informations fournies.",
         tags: ["Admins"],
