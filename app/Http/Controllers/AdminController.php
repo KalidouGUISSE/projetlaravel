@@ -22,6 +22,7 @@ class AdminController extends Controller
         operationId: "getAdminsList",
         summary: "Lister tous les admins",
         description: "Retourne la liste de tous les admins avec support pour la pagination, le tri et les filtres.",
+        security: [["bearerAuth" => []]],
         tags: ["Admins"],
         parameters: [
             new OA\Parameter(
@@ -129,6 +130,7 @@ class AdminController extends Controller
         operationId: "getAllComptesForAdmin",
         summary: "Lister tous les comptes avec pagination et filtres (Admin)",
         description: "Retourne la liste paginée de tous les comptes avec support pour la pagination, le tri et les filtres.",
+        security: [["bearerAuth" => []]],
         tags: ["Admins"],
         parameters: [
             new OA\Parameter(
@@ -227,6 +229,7 @@ class AdminController extends Controller
         operationId: "getAdminById",
         summary: "Afficher un admin spécifique",
         description: "Retourne les détails d'un admin par son ID.",
+        security: [["bearerAuth" => []]],
         tags: ["Admins"],
         parameters: [
             new OA\Parameter(
@@ -281,6 +284,7 @@ class AdminController extends Controller
         operationId: "updateAdmin",
         summary: "Mettre à jour un admin",
         description: "Met à jour les informations d'un admin existant.",
+        security: [["bearerAuth" => []]],
         tags: ["Admins"],
         parameters: [
             new OA\Parameter(
@@ -356,6 +360,7 @@ class AdminController extends Controller
         operationId: "deleteAdmin",
         summary: "Supprimer un admin",
         description: "Supprime un admin par son ID.",
+        security: [["bearerAuth" => []]],
         tags: ["Admins"],
         parameters: [
             new OA\Parameter(
@@ -419,6 +424,7 @@ class AdminController extends Controller
         operationId: "createAdmin",
         summary: "Créer un nouvel admin",
         description: "Crée un nouvel admin avec les informations fournies.",
+        security: [["bearerAuth" => []]],
         tags: ["Admins"],
         requestBody: new OA\RequestBody(
             required: true,

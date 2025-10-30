@@ -18,6 +18,7 @@ class ClientController extends Controller
           operationId: "getClientsList",
           summary: "Lister tous les clients avec pagination",
           description: "Retourne la liste paginée des clients avec support pour la pagination, le tri et les filtres.",
+          security: [["bearerAuth" => []]],
           tags: ["Clients"],
          parameters: [
              new OA\Parameter(
@@ -125,6 +126,7 @@ class ClientController extends Controller
         operationId: "createClient",
         summary: "Créer un nouveau client",
         description: "Crée un nouveau client avec les informations fournies.",
+        security: [["bearerAuth" => []]],
         tags: ["Clients"],
         requestBody: new OA\RequestBody(
             required: true,
@@ -173,6 +175,7 @@ class ClientController extends Controller
         operationId: "getClientById",
         summary: "Afficher un client spécifique",
         description: "Retourne les détails d'un client par son ID.",
+        security: [["bearerAuth" => []]],
         tags: ["Clients"],
         parameters: [
             new OA\Parameter(
@@ -350,6 +353,7 @@ class ClientController extends Controller
         operationId: "deleteClient",
         summary: "Supprimer un client",
         description: "Supprime un client par son ID.",
+        security: [["bearerAuth" => []]],
         tags: ["Clients"],
         parameters: [
             new OA\Parameter(
@@ -400,6 +404,7 @@ class ClientController extends Controller
         operationId: "getClientByTelephone",
         summary: "Récupérer un client par numéro de téléphone",
         description: "Retourne les détails d'un client en utilisant son numéro de téléphone.",
+        security: [["bearerAuth" => []]],
         tags: ["Clients"],
         parameters: [
             new OA\Parameter(
