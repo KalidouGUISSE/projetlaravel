@@ -16,7 +16,7 @@ class SwaggerController extends Controller
             $json = json_decode(json_encode($openapi), true);
 
             // Utiliser APP_URL pour définir la base URL
-            $baseUrl = env('APP_URL', 'http://127.0.0.1:8000');
+            $baseUrl = env('APP_URL', 'https://kalidou-guisse-projetlaravel.onrender.com');
 
             // Ajouter les serveurs manuellement si non présents
             if (!isset($json['servers']) || !is_array($json['servers']) || count($json['servers']) === 0) {

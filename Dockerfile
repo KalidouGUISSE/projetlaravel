@@ -40,7 +40,7 @@ RUN echo "APP_NAME=Laravel" > .env && \
     echo "APP_ENV=production" >> .env && \
     echo "APP_KEY=" >> .env && \
     echo "APP_DEBUG=false" >> .env && \
-    echo "APP_URL=http://localhost" >> .env && \
+    # echo "APP_URL=http://localhost" >> .env && \
     echo "" >> .env && \
     echo "LOG_CHANNEL=stack" >> .env && \
     echo "LOG_LEVEL=error" >> .env && \
@@ -51,6 +51,13 @@ RUN echo "APP_NAME=Laravel" > .env && \
     echo "DB_DATABASE=laravel_1gby" >> .env && \
     echo "DB_USERNAME=kalidou" >> .env && \
     echo "DB_PASSWORD=ohv1NrmSGW9Hvii064zYm6zS2lhH5LqR" >> .env && \
+    echo "DB_ARCHIVE_CONNECTION=pgsql" >> .env && \
+    echo "DB_ARCHIVE_HOST=ep-misty-breeze-agqp8t4t-pooler.c-2.eu-central-1.aws.neon.tech" >> .env && \
+    echo "DB_ARCHIVE_PORT=5432" >> .env && \
+    echo "DB_ARCHIVE_DATABASE=neondb" >> .env && \
+    echo "DB_ARCHIVE_USERNAME=neondb_owner" >> .env && \
+    echo "DB_ARCHIVE_PASSWORD=npg_fL7FyAgUItS5" >> .env && \
+    echo "DB_ARCHIVE_SSLMODE=require" >> .env && \
     echo "" >> .env && \
     echo "CACHE_DRIVER=file" >> .env && \
     echo "SESSION_DRIVER=file" >> .env && \
