@@ -20,3 +20,9 @@ Route::get('/', function () {
 
 Route::get('/api/documentation', [SwaggerController::class, 'ui'])->name('swagger.ui');
 Route::get('/api/docs.json', [SwaggerController::class, 'json'])->name('swagger.json');
+
+// Routes pour Swagger avec préfixe guisse
+Route::prefix('guisse')->group(function () {
+    Route::get('/documentation', [SwaggerController::class, 'ui'])->name('swagger.ui.prefixed');
+    Route::get('/docs.json', [SwaggerController::class, 'json'])->name('swagger.json.prefixed');
+});

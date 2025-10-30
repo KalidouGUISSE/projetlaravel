@@ -18,6 +18,16 @@
             margin:0;
             background: #fafafa;
         }
+        /* Correction des erreurs CSS liées aux propriétés background */
+        .swagger-ui .topbar {
+            background: #1f2937 !important;
+        }
+        .swagger-ui .info .title {
+            background: transparent !important;
+        }
+        .swagger-ui .scheme-container {
+            background: transparent !important;
+        }
     </style>
 </head>
 <body>
@@ -27,7 +37,7 @@
     <script>
         window.onload = function() {
             SwaggerUIBundle({
-                url: '/api/docs.json',
+                url: '/guisse/docs.json',
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
@@ -37,7 +47,22 @@
                 plugins: [
                     SwaggerUIBundle.plugins.DownloadUrl
                 ],
-                layout: "StandaloneLayout"
+                layout: "StandaloneLayout",
+                tryItOutEnabled: true,
+                requestInterceptor: function (req) {
+                    // Supprimer les références aux fichiers .map pour éviter les erreurs 404
+                    if (req.url && req.url.includes('.map')) {
+                        return false; // Annuler la requête
+                    }
+                    return req;
+                },
+                responseInterceptor: function (res) {
+                    // Ignorer les erreurs liées aux fichiers .map
+                    if (res.url && res.url.includes('.map') && res.status === 404) {
+                        return null; // Ignorer la réponse
+                    }
+                    return res;
+                }
             });
         };
     </script>

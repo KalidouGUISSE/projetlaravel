@@ -15,17 +15,20 @@ class SwaggerController extends Controller
             // Convertir en array pour modification
             $json = json_decode(json_encode($openapi), true);
 
+            // Utiliser APP_URL pour définir la base URL
+            $baseUrl = env('APP_URL', 'http://127.0.0.1:8000');
+
             // Ajouter les serveurs manuellement si non présents
             if (!isset($json['servers']) || !is_array($json['servers']) || count($json['servers']) === 0) {
                 $json['servers'] = [
                     [
-                        'url' => url('/guisse/v1'),
+                        'url' => $baseUrl . '/guisse/v1',
                         'description' => 'Serveur API'
                     ]
                 ];
             } else {
                 // Mettre à jour l'URL du serveur de manière dynamique
-                $json['servers'][0]['url'] = url('/guisse');
+                $json['servers'][0]['url'] = $baseUrl . '/guisse';
             }
 
             return response()->json($json);
