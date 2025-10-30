@@ -10,12 +10,8 @@ use OpenApi\Attributes as OA;
     description: "Documentation de mon API Laravel pour la gestion des clients et comptes"
 )]
 #[OA\Server(
-    url: "http://localhost:8000",
-    description: "Serveur de développement"
-)]
-#[OA\Server(
-    url: "https://kalidou-guisse-projetlaravel.onrender.com",
-    description: "Serveur de production"
+    url: "/guisse",
+    description: "Serveur API"
 )]
 #[OA\Schema(
     schema: "Client",
@@ -260,7 +256,7 @@ use OpenApi\Attributes as OA;
     ]
 )]
 #[OA\Post(
-    path: "/guisse/v1/auth/login",
+    path: "/auth/login",
     operationId: "loginUser",
     summary: "Connexion utilisateur",
     description: "Authentifie un utilisateur et retourne un token d'accès avec les permissions",
@@ -315,7 +311,7 @@ use OpenApi\Attributes as OA;
     ]
 )]
 #[OA\Post(
-    path: "/guisse/v1/auth/refresh",
+    path: "/auth/refresh",
     operationId: "refreshToken",
     summary: "Rafraîchir le token d'accès",
     description: "Utilise le refresh token pour obtenir un nouveau token d'accès",
@@ -361,7 +357,7 @@ use OpenApi\Attributes as OA;
     ]
 )]
 #[OA\Post(
-    path: "/guisse/v1/auth/logout",
+    path: "/auth/logout",
     operationId: "logoutUser",
     summary: "Déconnexion utilisateur",
     description: "Invalide les tokens de l'utilisateur connecté",

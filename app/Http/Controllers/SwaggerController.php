@@ -20,12 +20,12 @@ class SwaggerController extends Controller
                 $json['servers'] = [
                     [
                         'url' => url('/guisse/v1'),
-                        'description' => 'Serveur de développement'
+                        'description' => 'Serveur API'
                     ]
                 ];
             } else {
                 // Mettre à jour l'URL du serveur de manière dynamique
-                $json['servers'][0]['url'] = url('/');
+                $json['servers'][0]['url'] = url('/guisse');
             }
 
             return response()->json($json);
