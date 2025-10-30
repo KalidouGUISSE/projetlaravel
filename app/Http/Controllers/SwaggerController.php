@@ -11,11 +11,24 @@ class SwaggerController extends Controller
     {
         try {
             $openapi = Generator::scan([app_path('Http/Controllers'), app_path('Swagger')]);
-            // Mettre à jour l'URL du serveur de manière dynamique depuis les variables d'environnement
-            if (isset($openapi->servers) && is_array($openapi->servers) && count($openapi->servers) > 0) {
-                $openapi->servers[0]->url = '/guisse/v1';
+
+            // Convertir en array pour modification
+            $json = json_decode(json_encode($openapi), true);
+
+            // Ajouter les serveurs manuellement si non présents
+            if (!isset($json['servers']) || !is_array($json['servers']) || count($json['servers']) === 0) {
+                $json['servers'] = [
+                    [
+                        'url' => url('/guisse/v1'),
+                        'description' => 'Serveur de développement'
+                    ]
+                ];
+            } else {
+                // Mettre à jour l'URL du serveur de manière dynamique
+                $json['servers'][0]['url'] = url('/');
             }
-            return response()->json($openapi);
+
+            return response()->json($json);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

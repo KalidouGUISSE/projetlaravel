@@ -20,9 +20,9 @@ use App\Http\Controllers\AuthController;
 */
 
 // Routes d'authentification avec préfixe guisse uniquement
-Route::post('/guisse/v1/auth/login', [AuthController::class, 'login']);
-Route::post('/guisse/v1/auth/refresh', [AuthController::class, 'refresh']);
-Route::post('/guisse/v1/auth/logout', [AuthController::class, 'logout'])->middleware('auth:api');
+Route::post('/v1/auth/login', [AuthController::class, 'login']);
+Route::post('/v1/auth/refresh', [AuthController::class, 'refresh']);
+Route::post('/v1/auth/logout', [AuthController::class, 'logout'])->middleware('auth:api');
 
 // Routes API version 1
 Route::prefix('v1')->group(function () {

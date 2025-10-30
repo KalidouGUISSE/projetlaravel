@@ -31,6 +31,7 @@ class CompteController extends Controller
         operationId: "getComptesList",
         summary: "Lister les comptes avec pagination et filtres",
         description: "Retourne la liste des comptes avec support pour la pagination, le tri et les filtres.",
+        security: [["bearerAuth" => []]],
         tags: ["Comptes"],
         parameters: [
             new OA\Parameter(
@@ -532,13 +533,7 @@ class CompteController extends Controller
         operationId: "deleteCompte",
         summary: "Supprimer un compte (soft delete)",
         description: "Effectue une suppression douce du compte en changeant le statut à 'ferme' et en définissant la date de fermeture. Seul un compte actif peut être supprimé.",
-        security: [
-            new OA\SecurityScheme(
-                securityScheme: "bearerAuth",
-                type: "http",
-                scheme: "bearer"
-            )
-        ],
+        security: [["bearerAuth" => []]],
         tags: ["Comptes"],
         parameters: [
             new OA\Parameter(

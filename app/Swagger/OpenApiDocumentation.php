@@ -10,7 +10,7 @@ use OpenApi\Attributes as OA;
     description: "Documentation de mon API Laravel pour la gestion des clients et comptes"
 )]
 #[OA\Server(
-    url: "http://localhost:8000/guisse",
+    url: "http://localhost:8000",
     description: "Serveur de développement"
 )]
 #[OA\Server(
