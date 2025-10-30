@@ -78,10 +78,10 @@ use OpenApi\Attributes as OA;
             property: "links",
             type: "object",
             properties: [
-                new OA\Property(property: "self", type: "string", example: "https://projetlaravel-3.onrender.com/api/v1/comptes?page=1"),
-                new OA\Property(property: "first", type: "string", example: "https://projetlaravel-3.onrender.com/api/v1/comptes?page=1"),
-                new OA\Property(property: "last", type: "string", example: "https://projetlaravel-3.onrender.com/api/v1/comptes?page=5"),
-                new OA\Property(property: "next", type: "string", nullable: true, example: "https://projetlaravel-3.onrender.com/api/v1/comptes?page=2"),
+                new OA\Property(property: "self", type: "string", example: "https://kalidou-guisse-projetlaravel.onrender.com/guisse/v1/comptes?page=1"),
+                new OA\Property(property: "first", type: "string", example: "https://kalidou-guisse-projetlaravel.onrender.com/guisse/v1/comptes?page=1"),
+                new OA\Property(property: "last", type: "string", example: "https://kalidou-guisse-projetlaravel.onrender.com/guisse/v1/comptes?page=5"),
+                new OA\Property(property: "next", type: "string", nullable: true, example: "https://kalidou-guisse-projetlaravel.onrender.com/guisse/v1/comptes?page=2"),
                 new OA\Property(property: "previous", type: "string", nullable: true, example: null)
             ]
         )
