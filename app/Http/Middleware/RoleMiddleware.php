@@ -17,7 +17,8 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        $user = Auth::guard('api')->user();
+        // Récupérer l'utilisateur depuis notre middleware personnalisé
+        $user = $request->get('authenticated_user');
 
         if (!$user) {
             return response()->json([
@@ -26,7 +27,10 @@ class RoleMiddleware
             ], 401);
         }
 
-        if ($user->role !== $role) {
+        // Déterminer le rôle réel de l'utilisateur
+        $userRole = $this->getUserRole($user);
+
+        if ($userRole !== $role) {
             return response()->json([
                 'error' => 'Forbidden',
                 'message' => 'Permissions insuffisantes pour cette opération'
@@ -34,10 +38,37 @@ class RoleMiddleware
         }
 
         // Ajouter les permissions de l'utilisateur à la requête
-        $permissions = $this->getPermissionsForRole($user->role);
+        $permissions = $this->getPermissionsForRole($userRole);
         $request->merge(['user_permissions' => $permissions]);
 
         return $next($request);
+    }
+
+    /**
+     * Détermine le rôle réel de l'utilisateur en vérifiant les tables User, Admin et Client
+     */
+    private function getUserRole($user): string
+    {
+        // Vérifier d'abord si c'est un admin (UUID)
+        $admin = \App\Models\Admin::where('id', $user->id)->first();
+        if ($admin) {
+            return 'admin';
+        }
+
+        // Vérifier si c'est un client (UUID)
+        $client = \App\Models\Client::where('id', $user->id)->first();
+        if ($client) {
+            return 'client';
+        }
+
+        // Sinon, c'est un user (ID numérique ou string)
+        $userRecord = \App\Models\User::where('id', $user->id)->first();
+        if ($userRecord) {
+            return $userRecord->role ?? 'client';
+        }
+
+        // Par défaut, considérer comme client
+        return 'client';
     }
 
     /**

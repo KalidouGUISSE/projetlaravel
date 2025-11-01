@@ -21,7 +21,17 @@ class LoggingMiddleware
         $host = $request->getHost();
         $operation = $request->method();
         $resource = $request->path();
-        $user = auth('api')->user();
+        $user = $request->get('authenticated_user');
+
+        // Déterminer le rôle de l'utilisateur (admin ou user)
+        $userRole = null;
+        $userId = null;
+
+        if ($user) {
+            $userId = $user->id;
+            // Vérifier manuellement dans les tables pour déterminer le rôle
+            $userRole = $this->getUserRole($user);
+        }
 
         // Log de début d'opération
         Log::info("Opération de modification", [
@@ -29,8 +39,8 @@ class LoggingMiddleware
             'host' => $host,
             'nom_operation' => $operation,
             'ressource' => $resource,
-            'user_id' => $user ? $user->id : null,
-            'user_role' => $user ? $user->role : null,
+            'user_id' => $userId,
+            'user_role' => $userRole,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
@@ -46,8 +56,8 @@ class LoggingMiddleware
             'nom_operation' => $operation,
             'ressource' => $resource,
             'status' => $response->getStatusCode(),
-            'user_id' => $user ? $user->id : null,
-            'user_role' => $user ? $user->role : null,
+            'user_id' => $userId,
+            'user_role' => $userRole,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'duration_ms' => $startTime->diffInMilliseconds($endTime),
@@ -67,8 +77,16 @@ class LoggingMiddleware
     private function storeOperationLog(Request $request, Response $response, $user): void
     {
         try {
+            // Déterminer si c'est un admin ou un user pour le stockage du user_id
+            $userId = null;
+            if ($user) {
+                $userId = $user->id;
+                // Pour les admins, on peut stocker directement l'UUID
+                // Pour les users, on stocke l'ID (qui peut être string maintenant)
+            }
+
             DB::table('operation_logs')->insert([
-                'user_id' => $user ? $user->id : null,
+                'user_id' => $userId,
                 'operation' => $request->method(),
                 'resource' => $request->path(),
                 'status_code' => $response->getStatusCode(),
@@ -87,5 +105,36 @@ class LoggingMiddleware
                 'resource' => $request->path(),
             ]);
         }
+    }
+
+    /**
+     * Détermine le rôle réel de l'utilisateur en vérifiant les tables User, Admin et Client
+     */
+    private function getUserRole($user): ?string
+    {
+        if (!$user) {
+            return null;
+        }
+
+        // Vérifier d'abord si c'est un admin (UUID)
+        $admin = \App\Models\Admin::where('id', $user->id)->first();
+        if ($admin) {
+            return 'admin';
+        }
+
+        // Vérifier si c'est un client (UUID)
+        $client = \App\Models\Client::where('id', $user->id)->first();
+        if ($client) {
+            return 'client';
+        }
+
+        // Sinon, c'est un user (ID numérique ou string)
+        $userRecord = \App\Models\User::where('id', $user->id)->first();
+        if ($userRecord) {
+            return $userRecord->role ?? 'client';
+        }
+
+        // Par défaut, considérer comme client
+        return 'client';
     }
 }

@@ -453,17 +453,22 @@ class AdminController extends Controller
      */
     public function store(StoreAdminRequest $request)
     {
+        // Générer un mot de passe aléatoire
+        $generatedPassword = Str::random(12);
+
         $admin = Admin::create([
             'id'        => Str::uuid()->toString(),
             'nom'       => $request->nom,
             'prenom'    => $request->prenom,
             'email'     => $request->email,
             'telephone' => $request->telephone,
+            'password'  => $generatedPassword, // Le mutator va hasher automatiquement
         ]);
 
         return response()->json([
             'message' => 'Admin créé avec succès !',
             'data'    => new AdminResource($admin),
+            'generated_password' => $generatedPassword, // Retourner le mot de passe généré pour que l'admin puisse se connecter
         ], 201);
     }
 }

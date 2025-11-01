@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cookie;
 use Laravel\Passport\Client;
 use App\Models\User;
+use App\Models\Admin;
 use App\Traits\ApiResponseTrait;
 
 class AuthController extends Controller
@@ -15,7 +16,7 @@ class AuthController extends Controller
     use ApiResponseTrait;
 
     /**
-     * Connexion utilisateur
+     * Connexion utilisateur (User, Admin ou Client)
      */
     public function login(Request $request)
     {
@@ -24,31 +25,52 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Essayer d'abord avec User
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return $this->errorResponse('Identifiants invalides', 401);
+        if ($user && Hash::check($request->password, $user->password)) {
+            return $this->createAuthResponse($user, 'user');
         }
 
-        // Créer le token avec scopes basés sur le rôle
-        $scopes = $this->getScopesForRole($user->role);
-        $token = $user->createToken('API Token', $scopes);
+        // Si pas trouvé dans User, essayer avec Admin
+        $admin = Admin::where('email', $request->email)->first();
+
+        if ($admin && Hash::check($request->password, $admin->password)) {
+            return $this->createAuthResponse($admin, 'admin');
+        }
+
+        // Si pas trouvé dans Admin, essayer avec Client
+        $client = \App\Models\Client::where('email', $request->email)->first();
+
+        if ($client && Hash::check($request->password, $client->password)) {
+            return $this->createAuthResponse($client, 'client');
+        }
+
+        return $this->errorResponse('Identifiants invalides', 401);
+    }
+
+    /**
+     * Créer la réponse d'authentification
+     */
+    private function createAuthResponse($entity, string $type)
+    {
+        // Créer le token avec scopes basés sur le rôle/type
+        $role = $this->getRoleForEntity($entity, $type);
+        $scopes = $this->getScopesForRole($role);
+        $token = $entity->createToken('API Token', $scopes);
 
         // Créer le refresh token
-        $refreshToken = $user->createToken('Refresh Token', ['refresh']);
+        $refreshToken = $entity->createToken('Refresh Token', ['refresh']);
 
         // Stocker les tokens dans les cookies
         $accessTokenCookie = cookie('access_token', $token->accessToken, 60, '/', null, true, true); // 1 heure
         $refreshTokenCookie = cookie('refresh_token', $refreshToken->accessToken, 60 * 24 * 7, '/', null, true, true); // 7 jours
 
+        $userData = $this->getUserDataForEntity($entity, $type);
+
         return $this->successResponse([
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-            ],
-            'permissions' => $this->getPermissionsForRole($user->role),
+            'user' => $userData,
+            'permissions' => $this->getPermissionsForRole($role),
             'token_type' => 'Bearer',
             'access_token' => $token->accessToken,
             'expires_in' => 3600, // 1 heure
@@ -135,6 +157,52 @@ class AuthController extends Controller
         ];
 
         return $scopes[$role] ?? [];
+    }
+
+    /**
+     * Obtenir le rôle pour une entité donnée
+     */
+    private function getRoleForEntity($entity, string $type): string
+    {
+        if ($type === 'admin') {
+            return 'admin';
+        } elseif ($type === 'client') {
+            return 'client';
+        } else {
+            return $entity->role ?? 'client';
+        }
+    }
+
+    /**
+     * Obtenir les données utilisateur pour une entité donnée
+     */
+    private function getUserDataForEntity($entity, string $type): array
+    {
+        if ($type === 'admin') {
+            return [
+                'id' => $entity->id,
+                'name' => $entity->nom . ' ' . $entity->prenom,
+                'email' => $entity->email,
+                'role' => 'admin',
+                'type' => 'admin'
+            ];
+        } elseif ($type === 'client') {
+            return [
+                'id' => $entity->id,
+                'name' => $entity->nom . ' ' . $entity->prenom,
+                'email' => $entity->email,
+                'role' => 'client',
+                'type' => 'client'
+            ];
+        } else {
+            return [
+                'id' => $entity->id,
+                'name' => $entity->name,
+                'email' => $entity->email,
+                'role' => $entity->role,
+                'type' => 'user'
+            ];
+        }
     }
 
     /**

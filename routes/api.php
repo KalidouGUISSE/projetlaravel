@@ -31,7 +31,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/request', [RequestController::class, 'handle']);
 
     // Routes protégées nécessitant une authentification
-    Route::middleware(['auth:api', \App\Http\Middleware\LoggingMiddleware::class])->group(function () {
+    Route::middleware([\App\Http\Middleware\AuthMiddleware::class, \App\Http\Middleware\LoggingMiddleware::class])->group(function () {
 
         // Routes pour les clients (nécessitent auth)
         Route::get('/clients', [ClientController::class, 'index'])->middleware('role:admin');
