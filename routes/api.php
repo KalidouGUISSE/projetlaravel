@@ -55,12 +55,12 @@ Route::prefix('v1')->group(function () {
         Route::put('/clients/{id}', [ClientController::class, 'update'])->middleware('role:admin');
         Route::delete('/clients/{id}', [ClientController::class, 'destroy'])->middleware('role:admin');
 
-        // Routes pour les comptes
-        Route::get('/comptes', [CompteController::class, 'index'])->middleware('role:admin');
-        Route::post('/comptes', [CompteController::class, 'store'])->middleware('role:admin');
-        Route::get('/comptes/{id}', [CompteController::class, 'show'])->middleware('role:admin');
-        Route::put('/comptes/{id}', [CompteController::class, 'update'])->middleware('role:admin');
-        Route::delete('/comptes/{id}', [CompteController::class, 'destroy'])->middleware('role:admin');
+        // Routes pour les comptes - accès selon le rôle utilisateur
+        Route::get('/comptes', [CompteController::class, 'index']);
+        Route::post('/comptes', [CompteController::class, 'store']);
+        Route::get('/comptes/{id}', [CompteController::class, 'show']);
+        Route::put('/comptes/{id}', [CompteController::class, 'update']);
+        Route::delete('/comptes/{id}', [CompteController::class, 'destroy']);
 
         // Routes pour bloquer/débloquer les comptes (admin seulement)
         Route::post('/comptes/{id}/bloquer', [CompteController::class, 'bloquer'])->middleware('role:admin');

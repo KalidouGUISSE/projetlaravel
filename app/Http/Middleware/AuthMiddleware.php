@@ -62,19 +62,23 @@ class AuthMiddleware
             ], 401);
         }
 
-        // Définir l'utilisateur dans le bon guard selon son type
+        // Définir l'utilisateur dans le guard API pour tous les types d'utilisateurs
+        // Cela permet aux contrôleurs d'utiliser Auth::user() ou $request->user()
+        Auth::guard('api')->setUser($user);
+
+        // Définir également dans le guard spécifique selon le type
         if ($user instanceof \App\Models\Admin) {
             Auth::guard('admin')->setUser($user);
         } elseif ($user instanceof \App\Models\Client) {
             Auth::guard('client')->setUser($user);
-        } else {
-            Auth::guard('api')->setUser($user);
         }
 
         // Ajouter l'utilisateur à la requête pour les middlewares suivants
         $request->merge(['authenticated_user' => $user]);
-        // Ne pas utiliser setUser car cela cause des problèmes de type
-        // Au lieu de cela, nous utilisons notre propre logique dans les middlewares suivants
+        // Définir également l'utilisateur sur la requête Laravel standard
+        $request->setUserResolver(function () use ($user) {
+            return $user;
+        });
 
         return $next($request);
     }

@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use OpenApi\Attributes as OA;
@@ -211,7 +212,7 @@ class CompteController extends Controller
       */
      public function index(Request $request)
      {
-         // Récupérer l'utilisateur authentifié depuis la requête
+         // Récupérer l'utilisateur authentifié depuis la requête (défini par le middleware)
          $authenticatedUser = $request->get('authenticated_user');
 
          if ($authenticatedUser instanceof \App\Models\Admin) {
@@ -485,7 +486,7 @@ class CompteController extends Controller
             )
         ]
     )]
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         try {
             $compte = Compte::with('client')->find($id);
@@ -517,7 +518,21 @@ class CompteController extends Controller
                 return $this->errorResponse('Compte non trouvé', 404);
             }
 
-            // Retourner directement les données du compte sans vérifications d'auth
+            // Récupérer l'utilisateur authentifié depuis le guard API
+            $authenticatedUser = Auth::guard('api')->user();
+
+            // Vérifier les permissions d'accès
+            if ($authenticatedUser instanceof \App\Models\Admin) {
+                // Admin peut voir tous les comptes
+            } elseif ($authenticatedUser instanceof \App\Models\Client) {
+                // Client ne peut voir que ses propres comptes
+                if ($compte->client_id !== $authenticatedUser->id) {
+                    return $this->errorResponse('Permissions insuffisantes pour cette opération', 403);
+                }
+            } else {
+                return $this->errorResponse('Utilisateur non autorisé', 403);
+            }
+
             return $this->successResponse(
                 $this->getCompteData($compte),
                 'Compte récupéré avec succès',
