@@ -51,6 +51,7 @@ class OAuthClientSeeder extends Seeder
 
         // Créer un utilisateur de test
         DB::table('users')->insert([
+            'id' => (string) Str::uuid(),
             'name' => 'Admin User',
             'email' => 'admin@example.com',
             'password' => Hash::make('password'),
@@ -60,10 +61,39 @@ class OAuthClientSeeder extends Seeder
         ]);
 
         DB::table('users')->insert([
+            'id' => (string) Str::uuid(),
             'name' => 'Client User',
             'email' => 'client@example.com',
             'password' => Hash::make('password'),
             'role' => 'client',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Créer un admin de test
+        DB::table('admins')->insert([
+            'id' => (string) Str::uuid(),
+            'nom' => 'Admin',
+            'prenom' => 'Test',
+            'email' => 'admin@test.com',
+            'telephone' => '+221771234567',
+            'password' => Hash::make('password'),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Créer un client de test
+        DB::table('clients')->insert([
+            'id' => (string) Str::uuid(),
+            'nom' => 'Client',
+            'prenom' => 'Test',
+            'titulaire' => 'Client Test',
+            'email' => 'client@test.com',
+            'telephone' => '+221771234568',
+            'nci' => '1234567890123',
+            'adresse' => 'Dakar, Sénégal',
+            'password' => Hash::make('password'),
+            'code' => '123456',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

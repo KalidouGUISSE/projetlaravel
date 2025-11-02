@@ -20,9 +20,18 @@ use App\Http\Controllers\AuthController;
 */
 
 // Routes d'authentification avec préfixe guisse uniquement
-Route::post('/v1/auth/login', [AuthController::class, 'login']);
-Route::post('/v1/auth/refresh', [AuthController::class, 'refresh']);
-Route::post('/v1/auth/logout', [AuthController::class, 'logout'])->middleware('auth:api');
+Route::prefix('v1/auth')->group(function () {
+    // Endpoints séparés pour admin et client
+    Route::post('/admin/login', [AuthController::class, 'adminLogin']);
+    Route::post('/client/login', [AuthController::class, 'clientLogin']);
+
+    // Endpoint générique (pour compatibilité)
+    Route::post('/login', [AuthController::class, 'login']);
+
+    // Routes communes
+    Route::post('/refresh', [AuthController::class, 'refresh']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api');
+});
 
 // Routes API version 1
 Route::prefix('v1')->group(function () {

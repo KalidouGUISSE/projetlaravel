@@ -62,8 +62,14 @@ class AuthMiddleware
             ], 401);
         }
 
-        // Définir l'utilisateur dans le guard API pour que Passport fonctionne correctement
-        Auth::guard('api')->setUser($user);
+        // Définir l'utilisateur dans le bon guard selon son type
+        if ($user instanceof \App\Models\Admin) {
+            Auth::guard('admin')->setUser($user);
+        } elseif ($user instanceof \App\Models\Client) {
+            Auth::guard('client')->setUser($user);
+        } else {
+            Auth::guard('api')->setUser($user);
+        }
 
         // Ajouter l'utilisateur à la requête pour les middlewares suivants
         $request->merge(['authenticated_user' => $user]);

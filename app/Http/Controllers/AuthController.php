@@ -10,13 +10,154 @@ use Laravel\Passport\Client;
 use App\Models\User;
 use App\Models\Admin;
 use App\Traits\ApiResponseTrait;
+use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
 {
     use ApiResponseTrait;
 
+    #[OA\Post(
+        path: "/auth/admin/login",
+        summary: "Connexion administrateur",
+        description: "Authentification d'un administrateur avec email et mot de passe",
+        tags: ["Authentification"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["email", "password"],
+                properties: [
+                    new OA\Property(property: "email", type: "string", format: "email", example: "admin@test.com"),
+                    new OA\Property(property: "password", type: "string", example: "password123")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Connexion réussie",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: true),
+                        new OA\Property(property: "message", type: "string", example: "Connexion réussie"),
+                        new OA\Property(property: "data", properties: [
+                            new OA\Property(property: "user", properties: [
+                                new OA\Property(property: "id", type: "string", format: "uuid"),
+                                new OA\Property(property: "name", type: "string"),
+                                new OA\Property(property: "email", type: "string", format: "email"),
+                                new OA\Property(property: "role", type: "string", example: "admin"),
+                                new OA\Property(property: "type", type: "string", example: "admin")
+                            ]),
+                            new OA\Property(property: "permissions", type: "array", items: new OA\Items(type: "string")),
+                            new OA\Property(property: "token_type", type: "string", example: "Bearer"),
+                            new OA\Property(property: "access_token", type: "string"),
+                            new OA\Property(property: "expires_in", type: "integer", example: 3600)
+                        ])
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: "Identifiants invalides",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: false),
+                        new OA\Property(property: "message", type: "string", example: "Identifiants invalides")
+                    ]
+                )
+            )
+        ]
+    )]
     /**
-     * Connexion utilisateur (User, Admin ou Client)
+     * Connexion admin
+     */
+    public function adminLogin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $admin = Admin::where('email', $request->email)->first();
+
+        if (!$admin || !Hash::check($request->password, $admin->password)) {
+            return $this->errorResponse('Identifiants invalides', 401);
+        }
+
+        return $this->createAuthResponse($admin, 'admin');
+    }
+
+    #[OA\Post(
+        path: "/auth/client/login",
+        summary: "Connexion client",
+        description: "Authentification d'un client avec email et mot de passe",
+        tags: ["Authentification"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["email", "password"],
+                properties: [
+                    new OA\Property(property: "email", type: "string", format: "email", example: "maurine18@example.org"),
+                    new OA\Property(property: "password", type: "string", example: "password123")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Connexion réussie",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: true),
+                        new OA\Property(property: "message", type: "string", example: "Connexion réussie"),
+                        new OA\Property(property: "data", properties: [
+                            new OA\Property(property: "user", properties: [
+                                new OA\Property(property: "id", type: "string", format: "uuid"),
+                                new OA\Property(property: "name", type: "string"),
+                                new OA\Property(property: "email", type: "string", format: "email"),
+                                new OA\Property(property: "role", type: "string", example: "client"),
+                                new OA\Property(property: "type", type: "string", example: "client")
+                            ]),
+                            new OA\Property(property: "permissions", type: "array", items: new OA\Items(type: "string")),
+                            new OA\Property(property: "token_type", type: "string", example: "Bearer"),
+                            new OA\Property(property: "access_token", type: "string"),
+                            new OA\Property(property: "expires_in", type: "integer", example: 3600)
+                        ])
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: "Identifiants invalides",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: false),
+                        new OA\Property(property: "message", type: "string", example: "Identifiants invalides")
+                    ]
+                )
+            )
+        ]
+    )]
+    /**
+     * Connexion client
+     */
+    public function clientLogin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $client = \App\Models\Client::where('email', $request->email)->first();
+
+        if (!$client || !Hash::check($request->password, $client->password)) {
+            return $this->errorResponse('Identifiants invalides', 401);
+        }
+
+        return $this->createAuthResponse($client, 'client');
+    }
+
+    /**
+     * Connexion utilisateur (User, Admin ou Client) - Méthode dépréciée
      */
     public function login(Request $request)
     {
@@ -25,14 +166,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Essayer d'abord avec User
-        $user = User::where('email', $request->email)->first();
-
-        if ($user && Hash::check($request->password, $user->password)) {
-            return $this->createAuthResponse($user, 'user');
-        }
-
-        // Si pas trouvé dans User, essayer avec Admin
+        // Essayer d'abord avec Admin
         $admin = Admin::where('email', $request->email)->first();
 
         if ($admin && Hash::check($request->password, $admin->password)) {
@@ -57,6 +191,9 @@ class AuthController extends Controller
         // Créer le token avec scopes basés sur le rôle/type
         $role = $this->getRoleForEntity($entity, $type);
         $scopes = $this->getScopesForRole($role);
+
+        // Utiliser le bon guard selon le type
+        $guard = $type === 'admin' ? 'admin' : ($type === 'client' ? 'client' : 'api');
         $token = $entity->createToken('API Token', $scopes);
 
         // Créer le refresh token
@@ -123,6 +260,26 @@ class AuthController extends Controller
         ], 'Token rafraîchi')->withCookie($accessTokenCookie)->withCookie($refreshTokenCookie);
     }
 
+    #[OA\Post(
+        path: "/guisse/v1/auth/logout",
+        summary: "Déconnexion",
+        description: "Déconnexion de l'utilisateur actuel",
+        security: [["bearerAuth" => []]],
+        tags: ["Authentification"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Déconnexion réussie",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: true),
+                        new OA\Property(property: "message", type: "string", example: "Déconnexion réussie"),
+                        new OA\Property(property: "data", type: "object", example: null, nullable: true)
+                    ]
+                )
+            )
+        ]
+    )]
     /**
      * Déconnexion utilisateur
      */

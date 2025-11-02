@@ -114,19 +114,122 @@ class CompteController extends Controller
             )
         ]
     )]
+    #[OA\Get(
+        path: "/guisse/v1/comptes",
+        summary: "Lister les comptes",
+        description: "Admin: récupère tous les comptes. Client: récupère seulement ses comptes.",
+        security: [["bearerAuth" => []]],
+        tags: ["Comptes"],
+        parameters: [
+            new OA\Parameter(
+                name: "client_id",
+                in: "query",
+                required: false,
+                description: "ID du client (seulement pour admin)",
+                schema: new OA\Schema(type: "string", format: "uuid")
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                description: "Numéro de page",
+                schema: new OA\Schema(type: "integer", minimum: 1, default: 1)
+            ),
+            new OA\Parameter(
+                name: "limit",
+                in: "query",
+                required: false,
+                description: "Nombre d'éléments par page",
+                schema: new OA\Schema(type: "integer", minimum: 1, maximum: 100, default: 10)
+            ),
+            new OA\Parameter(
+                name: "type",
+                in: "query",
+                required: false,
+                description: "Filtrer par type de compte",
+                schema: new OA\Schema(type: "string", enum: ["epargne", "cheque"])
+            ),
+            new OA\Parameter(
+                name: "statut",
+                in: "query",
+                required: false,
+                description: "Filtrer par statut",
+                schema: new OA\Schema(type: "string", enum: ["actif", "bloque", "ferme"])
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Liste des comptes",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: true),
+                        new OA\Property(property: "data", type: "array", items: new OA\Items(
+                            properties: [
+                                new OA\Property(property: "id", type: "string", format: "uuid"),
+                                new OA\Property(property: "numeroCompte", type: "string"),
+                                new OA\Property(property: "titulaire", type: "string"),
+                                new OA\Property(property: "type", type: "string", enum: ["epargne", "cheque"]),
+                                new OA\Property(property: "solde", type: "number", format: "float"),
+                                new OA\Property(property: "devise", type: "string", example: "FCFA"),
+                                new OA\Property(property: "dateCreation", type: "string", format: "date-time"),
+                                new OA\Property(property: "statut", type: "string", enum: ["actif", "bloque", "ferme"]),
+                                new OA\Property(property: "metadata", type: "object"),
+                                new OA\Property(property: "client", properties: [
+                                    new OA\Property(property: "id", type: "string", format: "uuid"),
+                                    new OA\Property(property: "nom", type: "string"),
+                                    new OA\Property(property: "prenom", type: "string"),
+                                    new OA\Property(property: "email", type: "string", format: "email")
+                                ])
+                            ]
+                        )),
+                        new OA\Property(property: "pagination", type: "object", properties: [
+                            new OA\Property(property: "currentPage", type: "integer"),
+                            new OA\Property(property: "totalPages", type: "integer"),
+                            new OA\Property(property: "totalItems", type: "integer"),
+                            new OA\Property(property: "hasNext", type: "boolean"),
+                            new OA\Property(property: "hasPrevious", type: "boolean")
+                        ])
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: "Accès refusé",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: false),
+                        new OA\Property(property: "message", type: "string", example: "Permissions insuffisantes pour cette opération")
+                    ]
+                )
+            )
+        ]
+    )]
     /**
-     * Client peut récupérer la liste de ses comptes avec pagination et filtres
-     */
-    public function index(Request $request)
-    {
-        $clientId = $request->input('client_id');
+      * Client peut récupérer la liste de ses comptes avec pagination et filtres
+      * Admin peut récupérer la liste de tous les comptes
+      */
+     public function index(Request $request)
+     {
+         // Récupérer l'utilisateur authentifié depuis la requête
+         $authenticatedUser = $request->get('authenticated_user');
 
-        if ($clientId) {
-            $query = Compte::where('client_id', $clientId)->with('client');
-        } else {
-            // Lister tous les comptes si pas de client_id fourni
-            $query = Compte::with('client');
-        }
+         if ($authenticatedUser instanceof \App\Models\Admin) {
+             // Admin : peut voir tous les comptes
+             $query = Compte::with('client');
+         } elseif ($authenticatedUser instanceof \App\Models\Client) {
+             // Client : peut voir seulement ses propres comptes
+             $query = Compte::where('client_id', $authenticatedUser->id)->with('client');
+         } else {
+             // Si pas d'utilisateur authentifié ou type inconnu, retourner erreur
+             return $this->errorResponse('Utilisateur non autorisé', 403);
+         }
+
+         // Appliquer le filtre client_id si fourni (seulement pour admin)
+         $clientId = $request->input('client_id');
+         if ($clientId && $authenticatedUser instanceof \App\Models\Admin) {
+             $query->where('client_id', $clientId);
+         }
 
         // Appliquer les filtres
         if ($request->has('type')) {
