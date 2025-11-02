@@ -62,6 +62,9 @@ class AuthMiddleware
             ], 401);
         }
 
+        // Définir l'utilisateur dans le guard API pour que Passport fonctionne correctement
+        Auth::guard('api')->setUser($user);
+
         // Ajouter l'utilisateur à la requête pour les middlewares suivants
         $request->merge(['authenticated_user' => $user]);
         // Ne pas utiliser setUser car cela cause des problèmes de type
@@ -91,6 +94,12 @@ class AuthMiddleware
 
         // Essayer comme user (bigint ou string)
         $user = \App\Models\User::where('id', $userId)->first();
+        if ($user) {
+            return $user;
+        }
+
+        // Essayer avec la relation Passport par défaut
+        $user = $accessToken->user;
         if ($user) {
             return $user;
         }

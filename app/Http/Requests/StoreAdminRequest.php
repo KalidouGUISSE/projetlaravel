@@ -34,10 +34,9 @@ class StoreAdminRequest extends FormRequest
             'telephone' => [
                 'required',
                 'string',
-                'min:9',
-                'max:15',
                 'unique:admins,telephone',
-                Rule::unique('clients', 'telephone')->ignore($this->route('admin')) // Téléphone unique entre clients et admins
+                Rule::unique('clients', 'telephone')->ignore($this->route('admin')), // Téléphone unique entre clients et admins
+                new \App\Rules\SenegalPhoneRule,
             ],
         ];
     }

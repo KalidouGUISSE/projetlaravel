@@ -38,10 +38,9 @@ class UpdateAdminRequest extends FormRequest
                 'sometimes',
                 'required',
                 'string',
-                'min:9',
-                'max:15',
                 'unique:admins,telephone,' . $adminId,
-                Rule::unique('clients', 'telephone')->ignore($adminId, 'id') // Téléphone unique entre clients et admins
+                Rule::unique('clients', 'telephone')->ignore($adminId, 'id'), // Téléphone unique entre clients et admins
+                new \App\Rules\SenegalPhoneRule,
             ],
         ];
     }

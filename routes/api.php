@@ -26,6 +26,10 @@ Route::post('/v1/auth/logout', [AuthController::class, 'logout'])->middleware('a
 
 // Routes API version 1
 Route::prefix('v1')->group(function () {
+    
+    // Routes publiques pour créer admin et client (sans authentification)
+    Route::post('/clients', [ClientController::class, 'store']);
+    Route::post('/admins', [AdminController::class, 'store']);
 
     // Route pour tester le RequestController (pas d'auth)
     Route::get('/request', [RequestController::class, 'handle']);
@@ -35,7 +39,6 @@ Route::prefix('v1')->group(function () {
 
         // Routes pour les clients (nécessitent auth)
         Route::get('/clients', [ClientController::class, 'index'])->middleware('role:admin');
-        Route::post('/clients', [ClientController::class, 'store'])->middleware('role:admin');
         Route::get('/clients/{id}', [ClientController::class, 'show'])->middleware('role:admin');
         Route::get('/clients/telephone/{telephone}', [ClientController::class, 'getByTelephone'])->middleware('role:admin');
         Route::put('/clients/{id}', [ClientController::class, 'update'])->middleware('role:admin');
@@ -56,7 +59,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/comptes/bloquer-job', [CompteController::class, 'bloquerViaJob'])->middleware('role:admin');
 
         // Routes pour les admins (admin seulement)
-        Route::apiResource('admins', AdminController::class)->middleware('role:admin');
+        Route::get('/admins', [AdminController::class, 'index'])->middleware('role:admin');
+        Route::get('/admins/{id}', [AdminController::class, 'show'])->middleware('role:admin');
+        Route::put('/admins/{id}', [AdminController::class, 'update'])->middleware('role:admin');
+        Route::delete('/admins/{id}', [AdminController::class, 'destroy'])->middleware('role:admin');
         Route::get('/admins/comptes', [AdminController::class, 'getAllComptes'])->middleware('role:admin');
     });
 

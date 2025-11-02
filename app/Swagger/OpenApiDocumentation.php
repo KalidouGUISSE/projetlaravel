@@ -21,7 +21,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: "nom", type: "string", example: "Kilback"),
         new OA\Property(property: "prenom", type: "string", example: "Laury"),
         new OA\Property(property: "email", type: "string", format: "email", example: "brigitte.kuhn@example.net"),
-        new OA\Property(property: "telephone", type: "string", example: "+1-201-736-0670"),
+        new OA\Property(property: "telephone", type: "string", example: "+221774536764"),
         new OA\Property(property: "created_at", type: "string", format: "date-time", example: "2025-10-22T11:37:37.000000Z"),
         new OA\Property(property: "updated_at", type: "string", format: "date-time", example: "2025-10-22T11:37:37.000000Z")
     ]
@@ -187,7 +187,8 @@ use OpenApi\Attributes as OA;
     type: "object",
     properties: [
         new OA\Property(property: "message", type: "string", example: "Admin créé avec succès !"),
-        new OA\Property(property: "data", ref: "#/components/schemas/Admin")
+        new OA\Property(property: "data", ref: "#/components/schemas/Admin"),
+        new OA\Property(property: "generated_password", type: "string", example: "kK31ctO7PW3D")
     ]
 )]
 #[OA\Schema(
@@ -198,7 +199,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: "nom", type: "string", example: "Kilback"),
         new OA\Property(property: "prenom", type: "string", example: "Laury"),
         new OA\Property(property: "email", type: "string", format: "email", example: "brigitte.kuhn@example.net"),
-        new OA\Property(property: "telephone", type: "string", example: "+1-201-736-0670")
+        new OA\Property(property: "telephone", type: "string", example: "+221701231374")
     ]
 )]
 #[OA\Schema(

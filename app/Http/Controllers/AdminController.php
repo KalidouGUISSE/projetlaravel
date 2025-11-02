@@ -423,8 +423,7 @@ class AdminController extends Controller
         path: "/admins",
         operationId: "createAdmin",
         summary: "Créer un nouvel admin",
-        description: "Crée un nouvel admin avec les informations fournies.",
-        security: [["bearerAuth" => []]],
+        description: "Crée un nouvel admin avec les informations fournies. Route publique pour l'initialisation.",
         tags: ["Admins"],
         requestBody: new OA\RequestBody(
             required: true,

@@ -12,13 +12,16 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $keyType = 'string';
+    public $incrementing = false; // uuid
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'id', 'name',
         'email',
         'password',
         'role',
