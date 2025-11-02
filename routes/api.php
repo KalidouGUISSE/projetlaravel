@@ -30,6 +30,8 @@ Route::prefix('v1')->group(function () {
     // Routes publiques pour créer admin et client (sans authentification)
     Route::post('/clients', [ClientController::class, 'store']);
     Route::post('/admins', [AdminController::class, 'store']);
+    // Route::get('/admins', [AdminController::class, 'index'])->middleware('role:admin');
+    Route::get('/admins', [AdminController::class, 'index']);
 
     // Route pour tester le RequestController (pas d'auth)
     Route::get('/request', [RequestController::class, 'handle']);
@@ -59,7 +61,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/comptes/bloquer-job', [CompteController::class, 'bloquerViaJob'])->middleware('role:admin');
 
         // Routes pour les admins (admin seulement)
-        Route::get('/admins', [AdminController::class, 'index'])->middleware('role:admin');
+        // Route::get('/admins', [AdminController::class, 'index'])->middleware('role:admin');
         Route::get('/admins/{id}', [AdminController::class, 'show'])->middleware('role:admin');
         Route::put('/admins/{id}', [AdminController::class, 'update'])->middleware('role:admin');
         Route::delete('/admins/{id}', [AdminController::class, 'destroy'])->middleware('role:admin');

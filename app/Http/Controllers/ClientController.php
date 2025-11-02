@@ -130,13 +130,31 @@ class ClientController extends Controller
         tags: ["Clients"],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(ref: "#/components/schemas/ClientCreateRequest")
+            content: new OA\JsonContent(
+                required: ["nom", "prenom", "email", "telephone", "nci"],
+                properties: [
+                    new OA\Property(property: "nom", type: "string", example: "Kilback"),
+                    new OA\Property(property: "prenom", type: "string", example: "Laury"),
+                    new OA\Property(property: "email", type: "string", format: "email", example: "kuhn@example.net"),
+                    new OA\Property(property: "telephone", type: "string", example: "+2117865470"),
+                    new OA\Property(property: "nci", type: "string", description: "Numéro de Carte d'Identité (13 chiffres)", example: "1234567890123"),
+                    new OA\Property(property: "adresse", type: "string", example: "Dakar, Sénégal")
+                ],
+                type: "object"
+            )
         ),
         responses: [
             new OA\Response(
                 response: 201,
                 description: "Client créé avec succès",
-                content: new OA\JsonContent(ref: "#/components/schemas/ClientResponse")
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "message", type: "string", example: "Client créé avec succès !"),
+                        new OA\Property(property: "data", ref: "#/components/schemas/Client"),
+                        new OA\Property(property: "generated_password", type: "string", example: "kK31ctO7PW3D")
+                    ],
+                    type: "object"
+                )
             ),
             new OA\Response(
                 response: 422,
@@ -155,17 +173,24 @@ class ClientController extends Controller
      */
     public function store(StoreClientRequest $request)
     {
+        // Générer un mot de passe aléatoire
+        $password = Str::random(12);
+
         $client = Client::create([
             'id'        => Str::uuid()->toString(),
             'nom'       => $request->nom,
             'prenom'    => $request->prenom,
             'email'     => $request->email,
             'telephone' => $request->telephone,
+            'nci'       => $request->nci,
+            'adresse'   => $request->adresse,
+            'password'  => Hash::make($password),
         ]);
 
         return response()->json([
             'message' => 'Client créé avec succès !',
             'data'    => new ClientResource($client),
+            'generated_password' => $password, // Inclure le mot de passe généré dans la réponse
         ], 201);
     }
 

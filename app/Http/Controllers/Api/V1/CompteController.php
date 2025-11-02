@@ -200,7 +200,15 @@ class CompteController extends Controller
             new OA\Response(
                 response: 201,
                 description: "Compte créé avec succès",
-                content: new OA\JsonContent(ref: "#/components/schemas/CompteResponse")
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: true),
+                        new OA\Property(property: "message", type: "string", example: "Compte créé avec succès"),
+                        new OA\Property(property: "data", ref: "#/components/schemas/CompteResponse"),
+                        new OA\Property(property: "generated_password", type: "string", example: "kK31ctO7PW3D", description: "Mot de passe généré pour le nouveau client (si applicable)")
+                    ],
+                    type: "object"
+                )
             ),
             new OA\Response(
                 response: 400,
@@ -279,8 +287,15 @@ class CompteController extends Controller
 
             // Le numéro de compte est généré automatiquement dans le boot
 
+            $responseData = $this->getCompteData($compte);
+
+            // Si un nouveau client a été créé, inclure le mot de passe généré
+            if (isset($password)) {
+                $responseData['generated_password'] = $password;
+            }
+
             return $this->successResponse(
-                $this->getCompteData($compte),
+                $responseData,
                 'Compte créé avec succès',
                 201
             );

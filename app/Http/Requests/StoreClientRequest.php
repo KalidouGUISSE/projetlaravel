@@ -41,7 +41,7 @@ class StoreClientRequest extends FormRequest
                 \Illuminate\Validation\Rule::unique('admins', 'telephone')->ignore($this->route('client')) // Téléphone unique entre clients et admins
             ],
             'adresse'   => 'nullable|string|max:255',
-            'nci'       => ['nullable', new SenegalNciRule()],
+            'nci'       => ['required', new SenegalNciRule()],
         ];
     }
 
